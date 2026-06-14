@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Launch Briefing</title>
+<link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'&gt;&lt;circle cx='16' cy='16' r='13' fill='%23c8f060'/&gt;&lt;/svg&gt;">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0e0e10;
+    --surface: #17171a;
+    --border:  #2a2a30;
+    --accent:  #c8f060;
+    --accent2: #60c8f0;
+    --accent3: #f0a060;
+    --text:    #e8e8e0;
+    --muted:   #888880;
+    --serif:   'DM Serif Display', Georgia, serif;
+    --sans:    'DM Sans', system-ui, sans-serif;
+    --mono:    'DM Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  header {
+    padding: 2.25rem 4rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.6rem;
+  }
+
+  .weather {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(96,200,240,0.06);
+    border: 1px solid rgba(96,200,240,0.18);
+    padding: 0.5rem 0.9rem;
+    border-radius: 12px;
+  }
+  .wx-emoji { font-size: 1.5rem; line-height: 1; }
+  .wx-temp  { font-family: var(--serif); font-size: 1.6rem; color: var(--text); }
+  .wx-meta  { display: flex; flex-direction: column; gap: 0.1rem; }
+  .wx-loc   { font-family: var(--mono); font-size: 0.7rem; color: var(--accent2); letter-spacing: 0.04em; }
+  .wx-detail{ font-family: var(--mono); font-size: 0.66rem; color: var(--muted); }
+
+  .timestamp {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-align: right;
+  }
+
+  .quote-band {
+    text-align: center;
+    padding: 1.4rem 2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .quote-text {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.4;
+    max-width: 760px;
+    letter-spacing: -0.01em;
+  }
+  .q-lg { font-size: clamp(1.1rem, 2.6vw, 1.6rem); }
+  .q-md { font-size: clamp(1rem, 2.2vw, 1.35rem); }
+  .q-sm { font-size: clamp(0.9rem, 1.9vw, 1.15rem); }
+  .quote-author {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 1.5px;
+    background: var(--border);
+    border-top: 1.5px solid var(--border);
+  }
+
+  .card {
+    background: var(--surface);
+    padding: 1.75rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+
+  .card-header { display: flex; align-items: center; gap: 0.75rem; }
+  .card-icon   { font-size: 1.3rem; color: var(--accent); line-height: 1; }
+  .card:nth-child(2) .card-icon { color: var(--accent2); }
+  .card:nth-child(3) .card-icon { color: var(--accent3); }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  .count-badge {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    color: var(--muted);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+  }
+
+  /* Rates ticker */
+  .rates {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .rate { background: rgba(96,200,240,0.05); padding: 0.7rem 0.5rem; text-align: center; }
+  .rate-val { font-family: var(--serif); font-size: 1.5rem; color: var(--accent2); line-height: 1; }
+  .rate-lbl { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.1em; color: var(--muted); margin-top: 0.35rem; }
+  .rates-asof { font-family: var(--mono); font-size: 0.6rem; color: var(--muted); text-align: right; margin-top: -0.5rem; }
+
+  .summary {
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: #c8c8c0;
+    padding: 1rem 1.1rem;
+    background: rgba(255,255,255,0.03);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+  }
+  .card:nth-child(2) .summary { border-left-color: var(--accent2); }
+  .card:nth-child(3) .summary { border-left-color: var(--accent3); }
+
+  .takeaway {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text);
+    padding: 0.2rem 0.1rem;
+  }
+  .takeaway-lbl {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    background: rgba(200,240,96,0.1);
+    border: 1px solid rgba(200,240,96,0.25);
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .card:nth-child(2) .takeaway-lbl { color: var(--accent2); background: rgba(96,200,240,0.1); border-color: rgba(96,200,240,0.25); }
+  .card:nth-child(3) .takeaway-lbl { color: var(--accent3); background: rgba(240,160,96,0.1); border-color: rgba(240,160,96,0.25); }
+
+  .articles { display: flex; flex-direction: column; gap: 0.1rem; }
+  .articles-label {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .article-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    text-decoration: none;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .article-link:last-child { border-bottom: none; }
+  .article-link:hover { background: rgba(255,255,255,0.02); }
+
+  .art-title {
+    font-size: 0.84rem;
+    color: #c2c2ba;
+    line-height: 1.35;
+    transition: color 0.15s;
+  }
+  .article-link:hover .art-title { color: var(--text); }
+
+  .art-meta { display: flex; align-items: center; gap: 0.5rem; }
+  .src {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    padding: 0.05rem 0.4rem;
+    border-radius: 4px;
+  }
+  .art-age { font-family: var(--mono); font-size: 0.6rem; color: var(--muted); }
+
+  .new-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-right: 0.4rem;
+    vertical-align: middle;
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  /* Tournaments */
+  .tournaments { margin-top: 0.5rem; }
+  .tourney {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    text-decoration: none;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tourney:last-child { border-bottom: none; }
+  .t-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.6rem;
+    font-family: var(--mono);
+    line-height: 1.1;
+    border-right: 1px solid var(--border);
+    padding-right: 0.6rem;
+  }
+  .t-date b { font-size: 1.1rem; color: var(--accent3); font-weight: 500; }
+  .t-date span { font-size: 0.55rem; letter-spacing: 0.12em; color: var(--muted); }
+  .t-body { display: flex; flex-direction: column; gap: 0.15rem; }
+  .t-name { font-size: 0.82rem; color: #c2c2ba; line-height: 1.3; transition: color 0.15s; }
+  .tourney:hover .t-name { color: var(--text); }
+  .t-loc { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); }
+
+  footer {
+    padding: 1.5rem 4rem;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 640px) {
+    header, footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .card { padding: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo">Jason · Personal Intelligence</div>
+    <h1>Launch Briefing</h1>
+  </div>
+  <div class="header-right">
+    
+  <div class="weather">
+    <span class="wx-emoji">☀️</span>
+    <span class="wx-temp">80°</span>
+    <div class="wx-meta">
+      <div class="wx-loc">Cinco Ranch, Texas</div>
+      <div class="wx-detail">H 89° · L 76° · 💨 6 mph · 20% rain</div>
+    </div>
+  </div>
+    <div class="timestamp">Saturday, June 13, 2026 — 11:32 PM<br>Powered by Claude + local stack</div>
+  </div>
+</header>
+
+  <div class="quote-band">
+    <div class="quote-text q-lg">“The man who moves a mountain begins by carrying away small stones.”</div>
+    <div class="quote-author">— Confucius</div>
+  </div>
+<div class="grid">
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">⬡</span>
+                <h2>🤖 AI & Technology</h2>
+                <span class="count-badge">24</span>
+            </div>
+            
+            <div class="summary">OpenAI's acquisition of Ona marks a critical infrastructure play, enabling persistent cloud environments for enterprise AI agents while the company simultaneously expands distribution through Oracle Cloud and scales ChatGPT Enterprise—BBVA just deployed it to 100,000 employees. The regulatory landscape is solidifying: OpenAI's backing of EU Code of Practice standards and Anthropic's Washington regulation playbook signal industry consensus on AI governance, even as PRC-linked influence operations attempt to poison U.S. tech debates. Meanwhile, the talent and tooling layer fractionalizes further—Cohere launches North Mini Code, Anthropic releases Mythos-class models, and Hugging Face becomes infrastructure for agentic workflows, creating a multi-stack AI ecosystem rather than OpenAI dominance.</div>
+            <div class="takeaway"><span class="takeaway-lbl">TAKEAWAY</span>Enterprise adoption and regulatory compliance now drive AI value more than raw capability.</div>
+            <div class="articles">
+                <div class="articles-label">LATEST</div>
+                
+                <a href="https://huggingface.co/blog/allenai/olmo-eval" target="_blank" class="article-link">
+                    <span class="art-title">olmo-eval: An evaluation workbench for the model development loop</span>
+                    <span class="art-meta"><span class="src">Hugging Face Blog</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://openai.com/index/academy-courses-applying-ai-at-work" target="_blank" class="article-link">
+                    <span class="art-title">New OpenAI Academy courses for the next era of work</span>
+                    <span class="art-meta"><span class="src">OpenAI News</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://www.therundown.ai/p/jeff-bezos-41b-artificial-general-engineer" target="_blank" class="article-link">
+                    <span class="art-title">Jeff Bezos' $41B 'artificial general engineer'</span>
+                    <span class="art-meta"><span class="src">The Rundown AI</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://openai.com/index/preply" target="_blank" class="article-link">
+                    <span class="art-title">How Preply combines AI and human tutors to personalize learning</span>
+                    <span class="art-meta"><span class="src">OpenAI News</span><span class="art-age">2d ago</span></span>
+                </a>
+                <a href="https://www.therundown.ai/p/anthropic-writes-washington-an-ai-regulation-playbook" target="_blank" class="article-link">
+                    <span class="art-title">Anthropic writes Washington an AI regulation playbook</span>
+                    <span class="art-meta"><span class="src">The Rundown AI</span><span class="art-age">2d ago</span></span>
+                </a>
+                <a href="https://openai.com/index/supporting-eu-trustworthy-ai-ecosystem" target="_blank" class="article-link">
+                    <span class="art-title">Supporting Europe’s work in ensuring a trustworthy AI ecosystem</span>
+                    <span class="art-meta"><span class="src">OpenAI News</span><span class="art-age">3d ago</span></span>
+                </a>
+                <a href="https://openai.com/index/bbva" target="_blank" class="article-link">
+                    <span class="art-title">BBVA puts AI at the core of banking with OpenAI</span>
+                    <span class="art-meta"><span class="src">OpenAI News</span><span class="art-age">3d ago</span></span>
+                </a>
+                <a href="https://openai.com/index/openai-to-acquire-ona" target="_blank" class="article-link">
+                    <span class="art-title">OpenAI to acquire Ona</span>
+                    <span class="art-meta"><span class="src">OpenAI News</span><span class="art-age">3d ago</span></span>
+                </a>
+                <a href="https://openai.com/index/using-codex-to-simulate-black-holes" target="_blank" class="article-link">
+                    <span class="art-title">How an astrophysicist uses Codex to help simulate black holes</span>
+                    <span class="art-meta"><span class="src">OpenAI News</span><span class="art-age">3d ago</span></span>
+                </a>
+                <a href="https://huggingface.co/blog/torch-mlp-fusion" target="_blank" class="article-link">
+                    <span class="art-title">Profiling in PyTorch (Part 2): From nn.Linear to a Fused MLP</span>
+                    <span class="art-meta"><span class="src">Hugging Face Blog</span><span class="art-age">3d ago</span></span>
+                </a>
+                <a href="https://openai.com/index/openai-on-oracle-cloud" target="_blank" class="article-link">
+                    <span class="art-title">Access OpenAI models and Codex through your Oracle cloud commitment</span>
+                    <span class="art-meta"><span class="src">OpenAI News</span><span class="art-age">3d ago</span></span>
+                </a>
+                <a href="https://openai.com/index/prc-linked-influence-operations-ai-debates" target="_blank" class="article-link">
+                    <span class="art-title">PRC-linked influence operations are targeting AI debates in the US</span>
+                    <span class="art-meta"><span class="src">OpenAI News</span><span class="art-age">3d ago</span></span>
+                </a>
+            </div>
+            
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">◈</span>
+                <h2>🏦 Mortgage & Fintech</h2>
+                <span class="count-badge">32</span>
+            </div>
+            <div class="rates"><div class="rate"><div class="rate-val">6.52%</div><div class="rate-lbl">30-YR FIXED</div></div><div class="rate"><div class="rate-val">5.84%</div><div class="rate-lbl">15-YR FIXED</div></div><div class="rate"><div class="rate-val">4.48%</div><div class="rate-lbl">10-YR TREASURY</div></div></div><div class="rates-asof">Rates as of 6/11/2026</div>
+            <div class="summary">DAILY BRIEFING | MORTGAGE & FINTECH | January 2026
+
+Pending home sales surged to 75,856 in 2026 versus 72,039 last year despite mortgage rates holding firm near 6.58%, signaling demand outpacing the tightest inventory in years. HUD's proposal to allow multi-story manufactured homes without chassis could unlock $5,000-$10,000 in cost savings per unit, potentially expanding affordable housing options. AI-native lender Copperlane just closed a $4.1M seed round for Penny, an AI loan officer that processes borrower documents in minutes, marking accelerating fintech disruption in underwriting. New home sales cooled 6.2% in April to 622,000 units while inventory built, creating a divergence between existing-home strength and builder softness that mirrors the broader supply-demand tug-of-war.</div>
+            <div class="takeaway"><span class="takeaway-lbl">TAKEAWAY</span>Demand exists but affordability remains the defining bottleneck of 2026.</div>
+            <div class="articles">
+                <div class="articles-label">LATEST</div>
+                
+                <a href="https://www.housingwire.com/articles/housing-demand-inventory-2026pending-sales-rose-to-75856-vs-72039-in-2025-as-inventory-turned-negative-year-over-year-with-mortgage-rates-near-6-58/" target="_blank" class="article-link">
+                    <span class="art-title"><span class="new-dot"></span>Why housing demand is up and inventory is down in 2026</span>
+                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">7h ago</span></span>
+                </a>
+                <a href="https://www.housingwire.com/articles/hud-would-permit-multi-story-manufactured-homes-without-a-permanent-chassis/" target="_blank" class="article-link">
+                    <span class="art-title">HUD would permit multi-story manufactured homes without a permanent chassis</span>
+                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://www.housingwire.com/articles/report-lays-out-wealth-housing-gaps-facing-lgbtq-gen-z/" target="_blank" class="article-link">
+                    <span class="art-title">Report lays out wealth, housing gaps facing LGBTQ+ Gen Z</span>
+                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://www.housingwire.com/articles/drive-it-home-denver-condos/" target="_blank" class="article-link">
+                    <span class="art-title">Colorado’s Drive It Home financing kicks off with affordable condos</span>
+                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://www.housingwire.com/articles/lennar-q2-2026-land-light/" target="_blank" class="article-link">
+                    <span class="art-title">Lennar Q2 2026 results test the land-light model</span>
+                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://www.housingwire.com/articles/2026-realtrends-verified-journey-from-intern-to-owner-fuels-david-banks-teams-record-year/" target="_blank" class="article-link">
+                    <span class="art-title">2026 RealTrends Verified: Journey from intern to owner fuels David Banks Team’s record year</span>
+                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://www.housingwire.com/articles/copperlane-ai-mortgage-seed/" target="_blank" class="article-link">
+                    <span class="art-title">AI-native lending platform Copperlane lands $4.1M seed round</span>
+                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://www.housingwire.com/articles/warsh-fed-debut-cpi/" target="_blank" class="article-link">
+                    <span class="art-title">Markets await Warsh’s first meeting as Fed chair</span>
+                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://www.mortgagenewsdaily.com/news/06122026-mortgage-applications-mba" target="_blank" class="article-link">
+                    <span class="art-title">Modest Bounce in Refi Demand Despite Rate Volatility</span>
+                    <span class="art-meta"><span class="src">Mortgage News Daily</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://www.mortgagenewsdaily.com/news/06122026-existing-home-sales-nar-inventory-prices-appr" target="_blank" class="article-link">
+                    <span class="art-title">Existing-Home Sales Reach Five-Month High as Affordability Improves</span>
+                    <span class="art-meta"><span class="src">Mortgage News Daily</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://themortgagereports.com/132660/fed-rate-decision-june-2026-mortgage-rates" target="_blank" class="article-link">
+                    <span class="art-title">Will the Fed Give Mortgage Rates a Reason to Drop This Week?</span>
+                    <span class="art-meta"><span class="src">The Mortgage Reports</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://themortgagereports.com/132639/home-equity-loan-before-selling" target="_blank" class="article-link">
+                    <span class="art-title">Home Equity Loan Before Selling: Which Home Repairs Make Sense [2026]</span>
+                    <span class="art-meta"><span class="src">The Mortgage Reports</span><span class="art-age">2d ago</span></span>
+                </a>
+            </div>
+            
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">◎</span>
+                <h2>🥏 Disc Golf</h2>
+                <span class="count-badge">24</span>
+            </div>
+            
+            <div class="summary">The 2026 Disc Golf Pro Tour is in full swing with the European campaign kicking off at the Pärnu Open in Estonia, followed by the major European Open in Tallinn (June 18), while stateside action included Gannon Buhr and Esa-Pekka Saarinen winning at the Northwest Championship in Portland. The sport continues to expand mainstream visibility with Disc Golf Night at Comerica Park scheduled during Worlds Week in Michigan this August, and the equipment market saw six new discs approved from manufacturers including EV-7's triple release (Ethos, Kairos, Protos), Innova's Sync, and Crave Discs' Alces. The Creators Challenge returns for year two as professional and amateur pathways grow, while Ultiworld Disc Golf marked its 10-year anniversary of coverage.</div>
+            <div class="takeaway"><span class="takeaway-lbl">TAKEAWAY</span>European swing dominates spring schedule as pro tour globalizes rapidly.</div>
+            <div class="articles">
+                <div class="articles-label">LATEST</div>
+                
+                <a href="https://www.dgpt.com/news/2026-creators-challenge/?utm_source=rss&utm_medium=rss&utm_campaign=2026-creators-challenge" target="_blank" class="article-link">
+                    <span class="art-title">The Creators Challenge Returns for Year Two!</span>
+                    <span class="art-meta"><span class="src">Disc Golf Pro Tour</span><span class="art-age">1d ago</span></span>
+                </a>
+                <a href="https://www.dgpt.com/news/2026-parnu-open-preview/?utm_source=rss&utm_medium=rss&utm_campaign=2026-parnu-open-preview" target="_blank" class="article-link">
+                    <span class="art-title">The EuroTour Begins! Top Storylines & How to Watch the 2026 Pärnu Open</span>
+                    <span class="art-meta"><span class="src">Disc Golf Pro Tour</span><span class="art-age">2d ago</span></span>
+                </a>
+                <a href="https://discgolf.ultiworld.com/2026/06/11/the-upshot-european-swing-preview-with-esa-pekka-tupala-pres-by-pound-disc-golf/" target="_blank" class="article-link">
+                    <span class="art-title">The Upshot: European Swing Preview with Esa-Pekka Tupala [Pres. by Pound Disc Golf]</span>
+                    <span class="art-meta"><span class="src">Ultiworld Disc Golf</span><span class="art-age">2d ago</span></span>
+                </a>
+                <a href="https://www.pdga.com/pdga-api-license-agreement" target="_blank" class="article-link">
+                    <span class="art-title">PDGA API License Agreement</span>
+                    <span class="art-meta"><span class="src">PDGA News</span><span class="art-age">3d ago</span></span>
+                </a>
+                <a href="https://www.dgpt.com/news/your-complete-viewing-guide-to-the-2026-european-open/?utm_source=rss&utm_medium=rss&utm_campaign=your-complete-viewing-guide-to-the-2026-european-open" target="_blank" class="article-link">
+                    <span class="art-title">Your Complete Viewing Guide to the 2026 European Open</span>
+                    <span class="art-meta"><span class="src">Disc Golf Pro Tour</span><span class="art-age">3d ago</span></span>
+                </a>
+                <a href="https://discgolf.ultiworld.com/2026/06/09/the-upshot-northwest-champs-recap-pres-by-pound-disc-golf/" target="_blank" class="article-link">
+                    <span class="art-title">The Upshot: Northwest Champs Recap [Pres. by Pound Disc Golf]</span>
+                    <span class="art-meta"><span class="src">Ultiworld Disc Golf</span><span class="art-age">4d ago</span></span>
+                </a>
+                <a href="https://www.dgpt.com/news/disc-golf-night-at-comerica-park-lined-up-for-2026-worlds-week/?utm_source=rss&utm_medium=rss&utm_campaign=disc-golf-night-at-comerica-park-lined-up-for-2026-worlds-week" target="_blank" class="article-link">
+                    <span class="art-title">Disc Golf Night at Comerica Park Lined up for 2026 Worlds Week</span>
+                    <span class="art-meta"><span class="src">Disc Golf Pro Tour</span><span class="art-age">5d ago</span></span>
+                </a>
+                <a href="https://www.pdga.com/news/saarinen-buhr-prevail-pnw" target="_blank" class="article-link">
+                    <span class="art-title">Saarinen, Buhr Prevail in PNW</span>
+                    <span class="art-meta"><span class="src">PDGA News</span><span class="art-age">5d ago</span></span>
+                </a>
+                <a href="https://www.pdga.com/announcements/new-disc-approved-alces-crave-discs" target="_blank" class="article-link">
+                    <span class="art-title">New Disc Approved: Alces from Crave Discs</span>
+                    <span class="art-meta"><span class="src">PDGA News</span><span class="art-age">5d ago</span></span>
+                </a>
+                <a href="https://www.pdga.com/announcements/new-disc-approved-sync-innova-champion-discs" target="_blank" class="article-link">
+                    <span class="art-title">New Disc Approved: Sync from Innova Champion Discs</span>
+                    <span class="art-meta"><span class="src">PDGA News</span><span class="art-age">5d ago</span></span>
+                </a>
+                <a href="https://www.pdga.com/announcements/new-disc-approved-ole-reliable-discount-disc-golf" target="_blank" class="article-link">
+                    <span class="art-title">New Disc Approved: Ole Reliable from Discount Disc Golf</span>
+                    <span class="art-meta"><span class="src">PDGA News</span><span class="art-age">5d ago</span></span>
+                </a>
+                <a href="https://www.pdga.com/announcements/new-disc-approved-ethos-ev-7" target="_blank" class="article-link">
+                    <span class="art-title">New Disc Approved: Ethos from EV-7</span>
+                    <span class="art-meta"><span class="src">PDGA News</span><span class="art-age">5d ago</span></span>
+                </a>
+            </div>
+            
+            <div class="articles tournaments">
+                <div class="articles-label">🏆 UPCOMING TOURNAMENTS · HOUSTON</div>
+                
+                <a href="https://www.discgolfscene.com/tournaments/2026_MVP_Circuit_Challenge_Houston" target="_blank" class="tourney">
+                    <span class="t-date"><b>14</b><span>JUN</span></span>
+                    <span class="t-body">
+                        <span class="t-name">2026 MVP Circuit Challenge - Houston</span>
+                        <span class="t-loc">Stonebridge Church DGC · The Woodlands, TX</span>
+                    </span>
+                </a>
+                <a href="https://www.discgolfscene.com/tournaments/Throwing_Down_the_Gauntlet_at_Northside_Christian_Church_GOLD_Sponsored_by_MVP_Disc_Sports_2026" target="_blank" class="tourney">
+                    <span class="t-date"><b>20</b><span>JUN</span></span>
+                    <span class="t-body">
+                        <span class="t-name">Throwing Down the Gauntlet at Northside Christian Church (GOLD), Sponsored by MVP Disc Sports</span>
+                        <span class="t-loc">Northside Christian Church · Spring, TX</span>
+                    </span>
+                </a>
+                <a href="https://www.discgolfscene.com/tournaments/Innova_Disc_Replay_Flex_Presented_by_PAR54_2026" target="_blank" class="tourney">
+                    <span class="t-date"><b>20</b><span>JUN</span></span>
+                    <span class="t-body">
+                        <span class="t-name">Innova Disc Replay Flex Presented by PAR54</span>
+                        <span class="t-loc">TC Jester Park · Houston, TX</span>
+                    </span>
+                </a>
+                <a href="https://www.discgolfscene.com/tournaments/BYOP_DUBS_at_T_C_Jester_DGC_2026" target="_blank" class="tourney">
+                    <span class="t-date"><b>21</b><span>JUN</span></span>
+                    <span class="t-body">
+                        <span class="t-name">BYOP DUBS at T.C. Jester DGC</span>
+                        <span class="t-loc">TC Jester Park · Houston, TX</span>
+                    </span>
+                </a>
+                <a href="https://www.discgolfscene.com/tournaments/2026_NADGT_Flex_at_McDade_Park" target="_blank" class="tourney">
+                    <span class="t-date"><b>23</b><span>JUN</span></span>
+                    <span class="t-body">
+                        <span class="t-name">2026 NADGT: Flex @ McDade Park</span>
+                        <span class="t-loc">McDade Park · Conroe, TX</span>
+                    </span>
+                </a>
+                <a href="https://www.discgolfscene.com/tournaments/2026_NADGT_Flex_at_Lone_Star_9_Supported_by_Lone_Star_Disc" target="_blank" class="tourney">
+                    <span class="t-date"><b>25</b><span>JUN</span></span>
+                    <span class="t-body">
+                        <span class="t-name">2026 NADGT: Flex @ Lone Star 9 Supported by Lone Star Disc</span>
+                        <span class="t-loc">Lone Star Disc Nine · Conroe, TX</span>
+                    </span>
+                </a>
+                <a href="https://www.discgolfscene.com/tournaments/2026_NADGT_Flex_at_Challenger_7" target="_blank" class="tourney">
+                    <span class="t-date"><b>26</b><span>JUN</span></span>
+                    <span class="t-body">
+                        <span class="t-name">2026 NADGT: Flex @ Challenger 7</span>
+                        <span class="t-loc">Challenger 7 · Webster, TX</span>
+                    </span>
+                </a>
+                <a href="https://www.discgolfscene.com/tournaments/2026_NADGT_C_Tier_2_Rounder_at_Challenger_7_Supported_by_Prodigy" target="_blank" class="tourney">
+                    <span class="t-date"><b>27</b><span>JUN</span></span>
+                    <span class="t-body">
+                        <span class="t-name">2026 NADGT C Tier 2 Rounder @ Challenger 7 Supported by Prodigy</span>
+                        <span class="t-loc">Challenger 7 · Webster, TX</span>
+                    </span>
+                </a>
+                <a href="https://www.discgolfscene.com/tournaments/TDTG_Flex_at_Texas_Army_Trail_2_SILVER_Sponsored_by_MVP_Disc_Sports_2026" target="_blank" class="tourney">
+                    <span class="t-date"><b>27</b><span>JUN</span></span>
+                    <span class="t-body">
+                        <span class="t-name">TDTG Flex at Texas Army Trail-2 (SILVER) Sponsored by MVP Disc Sports</span>
+                        <span class="t-loc">Texas Army Trail at Bud Hadfield Park · Cypress, TX</span>
+                    </span>
+                </a>
+                <a href="https://www.discgolfscene.com/tournaments/Agnes_Moffitt_AM_Championship_Presented_by_Innova_Disc_Golf_2026" target="_blank" class="tourney">
+                    <span class="t-date"><b>27</b><span>JUN</span></span>
+                    <span class="t-body">
+                        <span class="t-name">Agnes Moffitt AM Championship Presented by Innova Disc Golf</span>
+                        <span class="t-loc">Agnes Moffitt Park · Houston, TX</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+</div>
+<footer>Generated by ai_dashboard.py · Summarized by Claude Haiku · Sources: RSS · Freddie Mac · US Treasury · Open-Meteo</footer>
+</body>
+</html>
