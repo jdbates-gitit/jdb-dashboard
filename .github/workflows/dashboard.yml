@@ -1,0 +1,36 @@
+name: Dashboard Auto-Deploy
+
+on:
+  schedule:
+    - cron: '0 11 * * *'   # 6AM CT (UTC-5) / 11AM UTC
+    - cron: '0 17 * * *'   # 12PM CT (UTC-5) / 5PM UTC
+  workflow_dispatch:         # allows manual trigger from GitHub
+
+jobs:
+  build-dashboard:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run dashboard script
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python ai_dashboard.py
+
+      - name: Commit and push updated dashboard
+        run: |
+          git config --global user.email "jdbates@gmail.com"
+          git config --global user.name "jdbates-gitit"
+          git add index.html
+          git diff --staged --quiet || git commit -m "auto-update dashboard"
+          git push
