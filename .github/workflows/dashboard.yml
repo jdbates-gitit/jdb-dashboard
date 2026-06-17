@@ -2,8 +2,13 @@ name: Dashboard Auto-Deploy
 
 on:
   schedule:
-    - cron: '0 11 * * *'   # 6AM CT (UTC-5) / 11AM UTC
-    - cron: '0 17 * * *'   # 12PM CT (UTC-5) / 5PM UTC
+    # CDT (summer, UTC-5): 6AM CT = 11 UTC, 12PM CT = 17 UTC
+    - cron: '0 11 * * *'
+    - cron: '0 17 * * *'
+    # CST (winter, UTC-6): 6AM CT = 12 UTC, 12PM CT = 18 UTC
+    - cron: '0 12 * * *'
+    - cron: '0 18 * * *'
+    # All four fire year-round; the Python time-gate runs work only at 6AM/12PM CT.
   workflow_dispatch:         # allows manual trigger from GitHub
 
 permissions:
@@ -30,6 +35,7 @@ jobs:
       - name: Run dashboard script
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RUN_NOW: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
         run: python ai_dashboard.py
 
       - name: Commit and push updated dashboard

@@ -867,6 +867,19 @@ def build_html(sections, weather, rates, tournaments, quote):
 
 # ── MAIN ─────────────────────────────────────────────────────────────────────
 def main():
+    # --- DST-proof run gate -------------------------------------------------
+    # Four UTC crons fire year-round (CDT + CST pairs). This gate lets only
+    # the runs that map to 6AM or 12PM Central actually do work. Manual runs
+    # (workflow_dispatch) bypass the gate by setting RUN_NOW=1.
+    import os, sys
+    from datetime import datetime as _dt
+    from zoneinfo import ZoneInfo as _ZI
+    if os.environ.get("RUN_NOW") != "1":
+        _ct_hour = _dt.now(_ZI("America/Chicago")).hour
+        if _ct_hour not in (6, 12):
+            log.info("Not a scheduled CT run hour (hour=%s). Exiting cleanly.", _ct_hour)
+            sys.exit(0)
+    # ------------------------------------------------------------------------
     log.info("── AI Dashboard Generator ──────────────────")
 
     if not API_KEY:
