@@ -31,7 +31,11 @@ API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 # Locate everything relative to this script, so the folder can be moved freely.
 DASHBOARD_DIR   = Path(__file__).resolve().parent
 LOG_PATH        = DASHBOARD_DIR / "dashboard.log"
-OUTPUT_FILE     = Path.home() / "OneDrive" / "AI Dashboard" / "ai_dashboard.html"
+import os
+if os.getenv("GITHUB_ACTIONS"):
+    OUTPUT_FILE = DASHBOARD_DIR / "index.html"
+else:
+    OUTPUT_FILE = Path.home() / "OneDrive" / "AI Dashboard" / "ai_dashboard.html"
 
 FEEDS = {
     "🤖 AI & Technology": [
