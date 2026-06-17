@@ -6,6 +6,9 @@ on:
     - cron: '0 17 * * *'   # 12PM CT (UTC-5) / 5PM UTC
   workflow_dispatch:         # allows manual trigger from GitHub
 
+permissions:
+  contents: write
+
 jobs:
   build-dashboard:
     runs-on: ubuntu-latest
@@ -13,6 +16,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
