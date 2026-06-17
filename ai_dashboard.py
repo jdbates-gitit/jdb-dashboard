@@ -57,6 +57,11 @@ FEEDS = {
 }
 
 MAX_ITEMS_PER_FEED  = 8     # fetched per source
+
+# --- Feed freshness controls ---
+MAX_AGE_HOURS = 48        # Drop feed entries older than this many hours
+KEEP_UNDATED = False      # If a feed entry has no parseable date: True=keep, False=drop
+
 MAX_HEADLINES_SHOWN = 12    # shown per category after merge+sort
 MAX_SUMMARY_LINES   = 30
 NEW_THRESHOLD_HOURS = 8     # stories newer than this get a "new" accent
@@ -238,10 +243,19 @@ def fetch_feed(name, url):
             link  = (entry.get("link")  or "").strip()
             raw   = entry.get("summary") or entry.get("description") or ""
             desc  = re.sub(r"<[^>]+>", "", raw)[:300].strip()
+            dt = entry_datetime(entry)
+            # Freshness filter: drop stale or (optionally) undated entries
+            if dt is None:
+                if not KEEP_UNDATED:
+                    continue
+            else:
+                age_hours = (datetime.now(timezone.utc) - dt).total_seconds() / 3600
+                if age_hours > MAX_AGE_HOURS:
+                    continue
             if title:
                 items.append({
                     "title": title, "link": link, "desc": desc,
-                    "source": name, "dt": entry_datetime(entry),
+                    "source": name, "dt": dt,
                 })
 
         log.info("  OK  %s: %d items", name, len(items))
