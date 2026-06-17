@@ -507,7 +507,7 @@ def quote_band_html(quote):
 
 def build_html(sections, weather, rates, tournaments, quote):
     from zoneinfo import ZoneInfo
-now = datetime.now(ZoneInfo("America/Chicago")).strftime("%A, %B %d, %Y — %I:%M %p CT")
+    now = datetime.now(ZoneInfo("America/Chicago")).strftime("%A, %B %d, %Y — %I:%M %p CT")
 
     cards_html = ""
     for category, summary, takeaway, items in sections:
