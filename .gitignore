@@ -1,0 +1,17 @@
+﻿# Python runtime artifacts
+__pycache__/
+*.pyc
+*.pyo
+
+# Dashboard runtime state and logs
+dashboard.log
+quote_state.txt
+
+# Local environment
+.env
+.venv/
+venv/
+
+# OS cruft
+.DS_Store
+Thumbs.db
