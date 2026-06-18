@@ -881,18 +881,57 @@ def build_html(sections, weather, rates, tournaments, quote):
 
 # ── MAIN ─────────────────────────────────────────────────────────────────────
 def main():
-    # --- DST-proof run gate -------------------------------------------------
-    # Four UTC crons fire year-round (CDT + CST pairs). This gate lets only
-    # the runs that map to 6AM or 12PM Central actually do work. Manual runs
-    # (workflow_dispatch) bypass the gate by setting RUN_NOW=1.
-    import os, sys
+    # --- Windowed run gate (absorbs GitHub Actions cron lag) -----------------
+    # GitHub fires scheduled crons late and imprecisely. Instead of demanding an
+    # exact hour, accept a WINDOW and run only the first cron that lands in it:
+    #   Morning: 5:00-9:59 AM CT   Midday: 11:00 AM-3:59 PM CT
+    # run_state.json remembers which slots ran today so later stragglers exit
+    # clean and we never double-run. Manual runs (RUN_NOW=1) bypass the gate.
+    import os, sys, json
     from datetime import datetime as _dt
     from zoneinfo import ZoneInfo as _ZI
+
     if os.environ.get("RUN_NOW") != "1":
-        _ct_hour = _dt.now(_ZI("America/Chicago")).hour
-        if _ct_hour not in (6, 12):
-            log.info("Not a scheduled CT run hour (hour=%s). Exiting cleanly.", _ct_hour)
+        _now = _dt.now(_ZI("America/Chicago"))
+        _today = _now.strftime("%Y-%m-%d")
+        _hour = _now.hour
+
+        # Which window are we in?
+        if 5 <= _hour < 10:
+            _slot = "morning"
+        elif 11 <= _hour < 16:
+            _slot = "midday"
+        else:
+            _slot = None
+
+        if _slot is None:
+            log.info("Outside run windows (CT hour=%s). Exiting cleanly.", _hour)
             sys.exit(0)
+
+        # Load today's run state (reset if it's a new day or file is missing)
+        _state_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "run_state.json")
+        _state = {"date": _today, "morning": False, "midday": False}
+        try:
+            with open(_state_path, "r", encoding="utf-8") as _f:
+                _loaded = json.load(_f)
+            if _loaded.get("date") == _today:
+                _state = _loaded
+        except Exception:
+            pass  # missing/corrupt -> start fresh for today
+
+        if _state.get(_slot):
+            log.info("Slot '%s' already ran today (%s). Exiting cleanly.", _slot, _today)
+            sys.exit(0)
+
+        # Claim the slot BEFORE heavy work so a near-simultaneous cron sees it taken
+        _state["date"] = _today
+        _state[_slot] = True
+        try:
+            with open(_state_path, "w", encoding="utf-8") as _f:
+                json.dump(_state, _f)
+            log.info("Claimed slot '%s' for %s; proceeding with run.", _slot, _today)
+        except Exception as _e:
+            log.warning("Could not write run_state.json: %s", _e)
     # ------------------------------------------------------------------------
     log.info("── AI Dashboard Generator ──────────────────")
 
