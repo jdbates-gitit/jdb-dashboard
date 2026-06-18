@@ -972,11 +972,17 @@ def main():
     REPO_DIR = r"C:\Users\jdbat\jdb-dashboard"
     try:
         import shutil
-        shutil.copy(OUTPUT_FILE, REPO_DIR + r"\index.html")
-        subprocess.run(["git", "-C", REPO_DIR, "add", "index.html"], check=True)
-        subprocess.run(["git", "-C", REPO_DIR, "commit", "-m", "auto-update dashboard"], check=True)
-        subprocess.run(["git", "-C", REPO_DIR, "push"], check=True)
-        log.info("Dashboard pushed to GitHub successfully.")
+        # In GitHub Actions, the workflow handles the commit/push and REPO_DIR
+        # (a local Windows path) does not exist on the runner. Skip the in-script
+        # push there; only push from local runs.
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            log.info("Running in GitHub Actions; workflow handles push. Skipping in-script push.")
+        else:
+            shutil.copy(OUTPUT_FILE, REPO_DIR + r"\index.html")
+            subprocess.run(["git", "-C", REPO_DIR, "add", "index.html"], check=True)
+            subprocess.run(["git", "-C", REPO_DIR, "commit", "-m", "auto-update dashboard"], check=True)
+            subprocess.run(["git", "-C", REPO_DIR, "push"], check=True)
+            log.info("Dashboard pushed to GitHub successfully.")
     except Exception as e:
         log.warning("GitHub push failed: %s", e)
     webbrowser.open(OUTPUT_FILE.as_uri())
