@@ -12,6 +12,7 @@ import os
 import re
 import csv
 import io
+import json
 import html
 import time
 import random
@@ -38,23 +39,69 @@ else:
     OUTPUT_FILE = Path.home() / "OneDrive" / "AI Dashboard" / "ai_dashboard.html"
 
 FEEDS = {
-    "🤖 AI & Technology": [
+    "AI & Technology": [
         ("The Rundown AI",       "https://rss.beehiiv.com/feeds/2R3C6Bt5wj.xml"),
         ("OpenAI News",          "https://openai.com/news/rss.xml"),
         ("Hugging Face Blog",    "https://huggingface.co/blog/feed.xml"),
     ],
-    "🏦 Mortgage & Fintech": [
-        ("HousingWire",          "https://www.housingwire.com/feed/"),
-        ("Mortgage News Daily",  "https://www.mortgagenewsdaily.com/rss/news"),
-        ("The Mortgage Reports", "https://themortgagereports.com/feed"),
-        ("Calculated Risk",      "https://www.calculatedriskblog.com/feeds/posts/default"),
-    ],
-    "🥏 Disc Golf": [
+    "Disc Golf": [
         ("PDGA News",            "https://www.pdga.com/rss.xml"),
         ("Ultiworld Disc Golf",  "https://discgolf.ultiworld.com/feed/"),
         ("Disc Golf Pro Tour",   "https://www.dgpt.com/feed/"),
     ],
+    "Gaming": [
+        ("IGN",                  "https://feeds.ign.com/ign/games-all"),
+        ("Polygon",              "https://www.polygon.com/rss/index.xml"),
+        ("Kotaku",                "https://kotaku.com/rss"),
+    ],
 }
+
+# Each category gets its own funnel depth. AI & Technology is the flagship
+# section and gets the full 5-step deep dive; Disc Golf and Gaming stay
+# light on purpose -- a uniform depth across every card would turn the
+# "launchpad" feeling back into a newspaper.
+CATEGORY_STEPS = {
+    "AI & Technology": [
+        ("NEW",       "What's new"),
+        ("UNLOCKS",   "What it unlocks"),
+        ("MATTERS",   "Why it matters"),
+        ("TRY",       "How to try it"),
+        ("LEADS",     "Where it could lead"),
+    ],
+    "Disc Golf": [
+        ("EVENT",     "Event / news"),
+        ("MATTERS",   "Why it matters"),
+        ("TAKEAWAY",  "One skill takeaway"),
+    ],
+    "Gaming": [
+        ("RELEASE",   "Releases / updates"),
+        ("MATTERS",   "What matters"),
+        ("WATCH",     "What to watch"),
+    ],
+}
+
+CATEGORY_ICONS = {
+    "AI & Technology":  "\u2b21",  # hexagon
+    "Expansion Signal": "\u25c8",  # diamond
+    "Project Vote":     "\u25b3",  # triangle
+    "Disc Golf":        "\u25ce",  # bullseye
+    "Gaming":           "\u25a6",  # squares
+}
+
+# Fixed tag vocabulary for Project Vote -- keeps the tag row visually
+# consistent instead of Claude inventing new emoji/labels every run.
+PROJECT_VOTE_TAGS = {
+    "MONEY":    ("\U0001F4B0", "Money"),
+    "PORTFOLIO":("\U0001F3AF", "Portfolio"),
+    "FUN":      ("\U0001F389", "Fun"),
+    "PROTECTS": ("\U0001F6E1\uFE0F", "Protects"),
+    "ADVENTURE":("\U0001F680", "Adventure"),
+    "HELPS":    ("\U0001F91D", "Helps Others"),
+}
+
+PROJECT_VOTE_LOG = DASHBOARD_DIR / "project_vote_log.json"
+MAX_VOTE_LOG_ENTRIES = 20   # stored history, a bit more than what's shown
+MAX_VOTE_TRAIL_SHOWN = 12   # entries shown in the card's Recent Votes trail
 
 MAX_ITEMS_PER_FEED  = 8     # fetched per source
 
@@ -399,38 +446,187 @@ def get_tournaments():
 
 
 def summarize_news(client, category, items):
-    """Return (summary_body, takeaway)."""
+    """Return an OrderedDict of {step_key: step_text} following that
+    category's funnel depth (CATEGORY_STEPS), or a single-key dict with an
+    explanatory message if there's nothing to summarize."""
+    steps = CATEGORY_STEPS[category]
     if not items:
-        return "No articles retrieved for this category.", ""
+        return {steps[0][0]: "No articles retrieved for this category."}
 
     lines = [f"- {it['title']}: {it['desc']}" for it in items[:MAX_SUMMARY_LINES]]
-    prompt = f"""You are a sharp analyst writing a quick daily briefing.
+    step_instructions = "\n".join(
+        f"{key}: {label} \u2014 1-2 sentences, specific (names, numbers, facts), no filler."
+        for key, label in steps
+    )
+
+    prompt = f"""You are writing one section of Jason's personal daily briefing.
 Category: {category}
 
 Headlines:
 {chr(10).join(lines)}
 
-Write 3-4 punchy sentences covering the most significant stories.
-Be specific with names, numbers, facts. No filler.
-Then, on a new final line, write: TAKEAWAY: <one bold insight in 10 words or less>
-Plain text only, no markdown, no bullets."""
+Write the following steps IN ORDER, each on its own line, each starting
+with the exact label shown (including the colon), plain text only, no
+markdown, no bullets, no restating the label in the sentence itself:
+
+{step_instructions}
+
+Ground everything in the actual headlines above. If a step genuinely
+doesn't apply to today's headlines, still write one honest sentence for
+it rather than skipping it."""
 
     try:
         msg = client.messages.create(
-            model=MODEL, max_tokens=240,
+            model=MODEL, max_tokens=420,
             messages=[{"role": "user", "content": prompt}],
         )
         text = msg.content[0].text.strip()
     except Exception as e:
         log.warning("  ERR summary (%s): %s", category, e)
-        return f"Summary unavailable: {e}", ""
+        return {steps[0][0]: f"Summary unavailable: {e}"}
 
-    takeaway = ""
-    m = re.search(r"TAKEAWAY:\s*(.+)$", text, re.IGNORECASE | re.DOTALL)
+    result = {}
+    for key, _label in steps:
+        m = re.search(rf"^{key}:\s*(.+?)(?=\n[A-Z]+:|\Z)", text, re.MULTILINE | re.DOTALL)
+        if m:
+            result[key] = re.sub(r"\s+", " ", m.group(1)).strip()
+    if not result:
+        # Parsing failed entirely (model didn't follow the format) -- fall
+        # back to showing the raw text under the first step so nothing is
+        # silently lost.
+        result = {steps[0][0]: text}
+    return result
+
+
+def generate_expansion_signal(client, ai_items):
+    """Second-order synthesis pass over the same AI & Technology headlines:
+    connect the dots across them and name one emerging opportunity."""
+    if not ai_items:
+        return {"SIGNAL": "No AI & Technology headlines to draw a pattern from today."}
+
+    lines = [f"- {it['title']}: {it['desc']}" for it in ai_items[:MAX_SUMMARY_LINES]]
+    prompt = f"""You are writing the "Expansion Signal" section of Jason's personal
+daily briefing -- a step beyond just reporting AI/tech news.
+
+Today's AI & Technology headlines:
+{chr(10).join(lines)}
+
+Write exactly two labeled parts, plain text, no markdown, no bullets:
+
+CONNECT: 1-2 sentences connecting the dots across TWO OR MORE of today's
+headlines into a single underlying pattern -- not just describing one
+story on its own.
+
+OPPORTUNITY: 1-2 sentences naming the specific emerging opportunity that
+pattern points to for Jason -- someone who builds real tools with AI as
+a technically capable non-developer. Be concrete, not motivational."""
+
+    try:
+        msg = client.messages.create(
+            model=MODEL, max_tokens=260,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = msg.content[0].text.strip()
+    except Exception as e:
+        log.warning("  ERR expansion signal: %s", e)
+        return {"SIGNAL": f"Expansion signal unavailable: {e}"}
+
+    result = {}
+    for key in ("CONNECT", "OPPORTUNITY"):
+        m = re.search(rf"^{key}:\s*(.+?)(?=\n[A-Z]+:|\Z)", text, re.MULTILINE | re.DOTALL)
+        if m:
+            result[key] = re.sub(r"\s+", " ", m.group(1)).strip()
+    if not result:
+        result = {"CONNECT": text}
+    return result
+
+
+def load_vote_log():
+    try:
+        with open(PROJECT_VOTE_LOG, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+def save_vote_log(log_entries):
+    try:
+        with open(PROJECT_VOTE_LOG, "w", encoding="utf-8") as f:
+            json.dump(log_entries[-MAX_VOTE_LOG_ENTRIES:], f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        log.warning("  ERR saving project vote log: %s", e)
+
+
+def generate_project_vote(client, ai_items):
+    """One concrete build idea drawn from today's AI/tech headlines, tagged
+    against Jason's own filter (money/portfolio/fun/etc), and appended to a
+    persisted log so patterns across days become visible over time."""
+    vote_log = load_vote_log()
+    recent_titles = [v["title"] for v in vote_log[-6:]]
+    avoid_line = (
+        f"Avoid repeating or lightly rewording these recent picks: {'; '.join(recent_titles)}."
+        if recent_titles else ""
+    )
+
+    if not ai_items:
+        result = {"IDEA": "No headlines today to draw a build idea from.", "tags": []}
+        return result
+
+    lines = [f"- {it['title']}: {it['desc']}" for it in ai_items[:MAX_SUMMARY_LINES]]
+    tag_list = ", ".join(PROJECT_VOTE_TAGS.keys())
+    prompt = f"""You are writing the "Project Vote" section of Jason's personal daily
+briefing: one concrete thing worth building or testing today, drawn from
+today's AI & Technology headlines.
+
+Jason is a technically capable non-developer who builds real tools with AI
+assistance (Make.com, Python scripts, Cloudflare Workers, Claude). He wants
+ideas that could: make money, help others, be genuinely useful to him, be
+fun, be an adventure, or be a portfolio piece -- ideally hitting more than
+one of those at once. {avoid_line}
+
+Headlines:
+{chr(10).join(lines)}
+
+Write exactly these labeled parts, plain text, no markdown, no bullets:
+
+TITLE: A short project name, a few words.
+IDEA: 1 sentence naming the build idea itself.
+WHY_NOW: 1 sentence on why this specific headline/moment makes it timely.
+SMALLEST: 1 sentence describing the smallest version worth actually building today.
+TAGS: 2-3 tags from this exact list, comma-separated, choosing only ones that genuinely apply: {tag_list}"""
+
+    try:
+        msg = client.messages.create(
+            model=MODEL, max_tokens=320,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = msg.content[0].text.strip()
+    except Exception as e:
+        log.warning("  ERR project vote: %s", e)
+        return {"IDEA": f"Project vote unavailable: {e}", "tags": []}
+
+    result = {}
+    for key in ("TITLE", "IDEA", "WHY_NOW", "SMALLEST"):
+        m = re.search(rf"^{key}:\s*(.+?)(?=\n[A-Z_]+:|\Z)", text, re.MULTILINE | re.DOTALL)
+        if m:
+            result[key] = re.sub(r"\s+", " ", m.group(1)).strip()
+
+    tags = []
+    m = re.search(r"^TAGS:\s*(.+?)(?=\n[A-Z_]+:|\Z)", text, re.MULTILINE | re.DOTALL)
     if m:
-        takeaway = m.group(1).strip()
-        text = text[:m.start()].strip()
-    return text, takeaway
+        for raw in m.group(1).split(","):
+            key = raw.strip().upper()
+            if key in PROJECT_VOTE_TAGS:
+                tags.append(key)
+    result["tags"] = tags
+
+    if "TITLE" in result:
+        from datetime import date as _date
+        vote_log.append({"date": _date.today().isoformat(), "title": result["TITLE"], "tags": tags, "flagged": False})
+        save_vote_log(vote_log)
+        result["_recent"] = vote_log[-(MAX_VOTE_TRAIL_SHOWN + 1):-1]  # prior entries, excluding today's
+
+    return result
 
 
 # ── HTML ─────────────────────────────────────────────────────────────────────
@@ -519,41 +715,116 @@ def quote_band_html(quote):
   </div>"""
 
 
-def build_html(sections, weather, rates, tournaments, quote):
+def funnel_html(steps, result):
+    blocks = ""
+    for key, label in steps:
+        text = result.get(key, "")
+        if not text:
+            continue
+        blocks += f"""
+            <div class="funnel-step">
+                <span class="step-lbl">{html.escape(label).upper()}</span>
+                <p>{html.escape(text)}</p>
+            </div>"""
+    return blocks
+
+
+def expansion_signal_html(result):
+    blocks = ""
+    if result.get("CONNECT"):
+        blocks += f'<div class="funnel-step"><span class="step-lbl">CONNECT THE DOTS</span><p>{html.escape(result["CONNECT"])}</p></div>'
+    if result.get("OPPORTUNITY"):
+        blocks += f'<div class="funnel-step"><span class="step-lbl">THE OPPORTUNITY</span><p>{html.escape(result["OPPORTUNITY"])}</p></div>'
+    return blocks
+
+
+def project_vote_html(result):
+    tags = result.get("tags", [])
+    tag_pills = "".join(
+        f'<span class="vote-tag">{PROJECT_VOTE_TAGS[t][0]} {PROJECT_VOTE_TAGS[t][1]}</span>'
+        for t in tags if t in PROJECT_VOTE_TAGS
+    )
+    tag_row = f'<div class="vote-tags">{tag_pills}</div>' if tag_pills else ""
+
+    blocks = ""
+    for key, label in (("IDEA", "The idea"), ("WHY_NOW", "Why now"), ("SMALLEST", "Smallest version")):
+        if result.get(key):
+            blocks += f'<div class="funnel-step"><span class="step-lbl">{label.upper()}</span><p>{html.escape(result[key])}</p></div>'
+
+    recent = result.get("_recent", [])
+    recent_html = ""
+    if recent:
+        rows = ""
+        for v in reversed(recent):
+            flagged = v.get("flagged", False)
+            row_class = " flagged" if flagged else ""
+            star = '<span class="vt-star">\u2605</span>' if flagged else ""
+            rows += f'<div class="vote-trail-row{row_class}">{star}<span class="vt-date">{v["date"]}</span><span class="vt-title">{html.escape(v["title"])}</span></div>'
+        recent_html = f"""
+            <div class="vote-trail">
+                <div class="articles-label">RECENT VOTES</div>
+                {rows}
+            </div>"""
+
+    return result.get("TITLE", ""), tag_row, blocks, recent_html
+
+
+def build_html(cards, weather, tournaments, quote):
     from zoneinfo import ZoneInfo
     now = datetime.now(ZoneInfo("America/Chicago")).strftime("%A, %B %d, %Y — %I:%M %p CT")
 
     cards_html = ""
-    for category, summary, takeaway, items in sections:
-        if "Mortgage" in category:
-            icon = "◈"
-        elif "Disc" in category:
-            icon = "◎"
-        else:
-            icon = "⬡"
+    for card in cards:
+        kind = card["kind"]
+        category = card["category"]
+        icon = CATEGORY_ICONS.get(category, "\u25c7")
+        css_class = card["css_class"]
 
-        rate_block = rates_html(rates) if "Mortgage" in category else ""
-        tourney_block = tournaments_html(tournaments) if "Disc" in category else ""
-        takeaway_block = (
-            f'<div class="takeaway"><span class="takeaway-lbl">TAKEAWAY</span>{takeaway}</div>'
-            if takeaway else ""
-        )
+        if kind == "vote":
+            title, tag_row, blocks, recent_html = project_vote_html(card["result"])
+            title_html = f'<div class="vote-title">{html.escape(title)}</div>' if title else ""
+            cards_html += f"""
+        <div class="card {css_class}">
+            <div class="card-header">
+                <span class="card-icon">{icon}</span>
+                <h2>{category}</h2>
+            </div>
+            {title_html}
+            {tag_row}
+            {blocks}
+            {recent_html}
+        </div>"""
+            continue
 
+        if kind == "signal":
+            blocks = expansion_signal_html(card["result"])
+            cards_html += f"""
+        <div class="card {css_class}">
+            <div class="card-header">
+                <span class="card-icon">{icon}</span>
+                <h2>{category}</h2>
+            </div>
+            {blocks}
+        </div>"""
+            continue
+
+        # kind == "funnel" -- AI & Technology, Disc Golf, Gaming
+        items = card["items"]
+        blocks = funnel_html(CATEGORY_STEPS[category], card["result"])
+        extra_block = tournaments_html(tournaments) if category == "Disc Golf" else ""
         cards_html += f"""
-        <div class="card">
+        <div class="card {css_class}">
             <div class="card-header">
                 <span class="card-icon">{icon}</span>
                 <h2>{category}</h2>
                 <span class="count-badge">{len(items)}</span>
             </div>
-            {rate_block}
-            <div class="summary">{summary}</div>
-            {takeaway_block}
+            {blocks}
             <div class="articles">
                 <div class="articles-label">LATEST</div>
                 {headlines_html(items)}
             </div>
-            {tourney_block}
+            {extra_block}
         </div>"""
 
     return f"""<!DOCTYPE html>
@@ -574,6 +845,8 @@ def build_html(sections, weather, rates, tournaments, quote):
     --accent:  #c8f060;
     --accent2: #60c8f0;
     --accent3: #f0a060;
+    --accent4: #d060f0;
+    --accent5: #60f0a8;
     --text:    #e8e8e0;
     --muted:   #888880;
     --serif:   'DM Serif Display', Georgia, serif;
@@ -692,8 +965,10 @@ def build_html(sections, weather, rates, tournaments, quote):
 
   .card-header {{ display: flex; align-items: center; gap: 0.75rem; }}
   .card-icon   {{ font-size: 1.3rem; color: var(--accent); line-height: 1; }}
-  .card:nth-child(2) .card-icon {{ color: var(--accent2); }}
-  .card:nth-child(3) .card-icon {{ color: var(--accent3); }}
+  .card-signal .card-icon {{ color: var(--accent2); }}
+  .card-vote   .card-icon {{ color: var(--accent3); }}
+  .card-disc   .card-icon {{ color: var(--accent4); }}
+  .card-gaming .card-icon {{ color: var(--accent5); }}
 
   h2 {{
     font-family: var(--serif);
@@ -728,40 +1003,68 @@ def build_html(sections, weather, rates, tournaments, quote):
   .rate-lbl {{ font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.1em; color: var(--muted); margin-top: 0.35rem; }}
   .rates-asof {{ font-family: var(--mono); font-size: 0.6rem; color: var(--muted); text-align: right; margin-top: -0.5rem; }}
 
-  .summary {{
+  .funnel-step {{
     font-size: 0.88rem;
-    line-height: 1.65;
+    line-height: 1.6;
     color: #c8c8c0;
-    padding: 1rem 1.1rem;
+    padding: 0.85rem 1.1rem;
     background: rgba(255,255,255,0.03);
     border-left: 2px solid var(--accent);
     border-radius: 0 4px 4px 0;
   }}
-  .card:nth-child(2) .summary {{ border-left-color: var(--accent2); }}
-  .card:nth-child(3) .summary {{ border-left-color: var(--accent3); }}
-
-  .takeaway {{
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--text);
-    padding: 0.2rem 0.1rem;
-  }}
-  .takeaway-lbl {{
+  .funnel-step .step-lbl {{
+    display: block;
     font-family: var(--mono);
-    font-size: 0.55rem;
+    font-size: 0.58rem;
     letter-spacing: 0.15em;
     color: var(--accent);
-    background: rgba(200,240,96,0.1);
-    border: 1px solid rgba(200,240,96,0.25);
-    padding: 0.15rem 0.45rem;
-    border-radius: 4px;
-    flex-shrink: 0;
+    margin-bottom: 0.35rem;
   }}
-  .card:nth-child(2) .takeaway-lbl {{ color: var(--accent2); background: rgba(96,200,240,0.1); border-color: rgba(96,200,240,0.25); }}
-  .card:nth-child(3) .takeaway-lbl {{ color: var(--accent3); background: rgba(240,160,96,0.1); border-color: rgba(240,160,96,0.25); }}
+  .funnel-step p {{ color: #c8c8c0; }}
+  .card-signal .funnel-step {{ border-left-color: var(--accent2); }}
+  .card-signal .funnel-step .step-lbl {{ color: var(--accent2); }}
+  .card-vote .funnel-step {{ border-left-color: var(--accent3); }}
+  .card-vote .funnel-step .step-lbl {{ color: var(--accent3); }}
+  .card-disc .funnel-step {{ border-left-color: var(--accent4); }}
+  .card-disc .funnel-step .step-lbl {{ color: var(--accent4); }}
+  .card-gaming .funnel-step {{ border-left-color: var(--accent5); }}
+  .card-gaming .funnel-step .step-lbl {{ color: var(--accent5); }}
+
+  .vote-title {{
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    color: var(--text);
+    line-height: 1.2;
+  }}
+
+  .vote-tags {{ display: flex; flex-wrap: wrap; gap: 0.5rem; }}
+  .vote-tag {{
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.05em;
+    color: var(--accent3);
+    background: rgba(240,160,96,0.1);
+    border: 1px solid rgba(240,160,96,0.25);
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+    white-space: nowrap;
+  }}
+
+  .vote-trail {{ display: flex; flex-direction: column; gap: 0.1rem; }}
+  .vote-trail-row {{
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+  }}
+  .vote-trail-row:last-child {{ border-bottom: none; }}
+  .vt-date {{ font-family: var(--mono); font-size: 0.62rem; color: var(--muted); flex-shrink: 0; }}
+  .vt-title {{ color: #b8b8b0; }}
+  .vote-trail-row.flagged {{ background: rgba(240,160,96,0.06); border-radius: 4px; padding-left: 0.4rem; }}
+  .vote-trail-row.flagged .vt-title {{ color: var(--text); }}
+  .vt-star {{ color: var(--accent3); font-size: 0.7rem; flex-shrink: 0; }}
 
   .articles {{ display: flex; flex-direction: column; gap: 0.1rem; }}
   .articles-label {{
@@ -874,7 +1177,7 @@ def build_html(sections, weather, rates, tournaments, quote):
 <div class="grid">
 {cards_html}
 </div>
-<footer>Generated by ai_dashboard.py · Summarized by Claude Haiku · Sources: RSS · Freddie Mac · US Treasury · Open-Meteo</footer>
+<footer>Generated by ai_dashboard.py · Summarized by Claude Haiku · Sources: RSS · Open-Meteo</footer>
 </body>
 </html>"""
 
@@ -946,25 +1249,54 @@ def main():
     quote = get_quote()
     log.info('Quote: "%s" — %s', quote[0][:50], quote[1])
 
-    log.info("[Rates, Weather & Tournaments]")
-    rates       = get_rates()
+    log.info("[Weather & Tournaments]")
     weather     = get_weather()
     tournaments = get_tournaments()
 
-    sections = []
+    # Fetch every feed category up front -- AI & Technology's items get
+    # reused by Expansion Signal and Project Vote, not just its own card.
+    items_by_category = {}
     for category, feeds in FEEDS.items():
-        log.info("[%s]", category.encode("ascii", "ignore").decode().strip() or category)
+        log.info("[%s]", category)
         items = []
         for name, url in feeds:
             items.extend(fetch_feed(name, url))
-        # newest first; undated items sink to the bottom
         items.sort(key=lambda it: it["dt"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
-        log.info("  -> Summarizing with Claude...")
-        summary, takeaway = summarize_news(client, category, items)
-        sections.append((category, summary, takeaway, items))
+        items_by_category[category] = items
+
+    ai_items = items_by_category.get("AI & Technology", [])
+
+    cards = []
+
+    log.info("[AI & Technology] -> Summarizing with Claude...")
+    ai_result = summarize_news(client, "AI & Technology", ai_items)
+    cards.append({"kind": "funnel", "category": "AI & Technology", "css_class": "card-ai",
+                  "result": ai_result, "items": ai_items})
+
+    log.info("[Expansion Signal] -> Synthesizing with Claude...")
+    signal_result = generate_expansion_signal(client, ai_items)
+    cards.append({"kind": "signal", "category": "Expansion Signal", "css_class": "card-signal",
+                  "result": signal_result})
+
+    log.info("[Project Vote] -> Generating with Claude...")
+    vote_result = generate_project_vote(client, ai_items)
+    cards.append({"kind": "vote", "category": "Project Vote", "css_class": "card-vote",
+                  "result": vote_result})
+
+    disc_items = items_by_category.get("Disc Golf", [])
+    log.info("[Disc Golf] -> Summarizing with Claude...")
+    disc_result = summarize_news(client, "Disc Golf", disc_items)
+    cards.append({"kind": "funnel", "category": "Disc Golf", "css_class": "card-disc",
+                  "result": disc_result, "items": disc_items})
+
+    gaming_items = items_by_category.get("Gaming", [])
+    log.info("[Gaming] -> Summarizing with Claude...")
+    gaming_result = summarize_news(client, "Gaming", gaming_items)
+    cards.append({"kind": "funnel", "category": "Gaming", "css_class": "card-gaming",
+                  "result": gaming_result, "items": gaming_items})
 
     log.info("Building dashboard -> %s", OUTPUT_FILE)
-    html = build_html(sections, weather, rates, tournaments, quote)
+    html = build_html(cards, weather, tournaments, quote)
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_FILE.write_text(html, encoding="utf-8")
     # Auto-push to GitHub
@@ -979,7 +1311,7 @@ def main():
             log.info("Running in GitHub Actions; workflow handles push. Skipping in-script push.")
         else:
             shutil.copy(OUTPUT_FILE, REPO_DIR + r"\index.html")
-            subprocess.run(["git", "-C", REPO_DIR, "add", "index.html"], check=True)
+            subprocess.run(["git", "-C", REPO_DIR, "add", "index.html", "project_vote_log.json"], check=True)
             subprocess.run(["git", "-C", REPO_DIR, "commit", "-m", "auto-update dashboard"], check=True)
             subprocess.run(["git", "-C", REPO_DIR, "push"], check=True)
             log.info("Dashboard pushed to GitHub successfully.")
