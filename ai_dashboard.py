@@ -550,9 +550,19 @@ def load_vote_log():
 
 
 def save_vote_log(log_entries):
+    # Flagged entries are exempt from the cap -- they're a deliberate
+    # "keep this one" decision and shouldn't quietly age out. Only
+    # unflagged entries count against MAX_VOTE_LOG_ENTRIES, trimmed
+    # oldest-first, with chronological order preserved throughout.
+    flagged = [e for e in log_entries if e.get("flagged")]
+    unflagged = [e for e in log_entries if not e.get("flagged")]
+    budget = max(0, MAX_VOTE_LOG_ENTRIES - len(flagged))
+    unflagged_kept = unflagged[-budget:] if budget else []
+    kept_ids = {id(e) for e in flagged} | {id(e) for e in unflagged_kept}
+    merged = [e for e in log_entries if id(e) in kept_ids]
     try:
         with open(PROJECT_VOTE_LOG, "w", encoding="utf-8") as f:
-            json.dump(log_entries[-MAX_VOTE_LOG_ENTRIES:], f, ensure_ascii=False, indent=2)
+            json.dump(merged, f, ensure_ascii=False, indent=2)
     except Exception as e:
         log.warning("  ERR saving project vote log: %s", e)
 
@@ -622,7 +632,15 @@ TAGS: 2-3 tags from this exact list, comma-separated, choosing only ones that ge
 
     if "TITLE" in result:
         from datetime import date as _date
-        vote_log.append({"date": _date.today().isoformat(), "title": result["TITLE"], "tags": tags, "flagged": False})
+        vote_log.append({
+            "date": _date.today().isoformat(),
+            "title": result["TITLE"],
+            "idea": result.get("IDEA", ""),
+            "why_now": result.get("WHY_NOW", ""),
+            "smallest": result.get("SMALLEST", ""),
+            "tags": tags,
+            "flagged": False,
+        })
         save_vote_log(vote_log)
         result["_recent"] = vote_log[-(MAX_VOTE_TRAIL_SHOWN + 1):-1]  # prior entries, excluding today's
 
