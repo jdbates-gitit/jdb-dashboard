@@ -31,5 +31,19 @@
       "FUN"
     ],
     "flagged": false
+  },
+  {
+    "date": "2026-08-16",
+    "title": "Rapid-Fire Research Digest Engine",
+    "idea": "Build a daily-updated knowledge base that ingests trending AI/tech headlines, extracts actionable insights, and serves them back as structured briefing cards without manual curation.",
+    "tool": "n8n + Claude API + Supabase",
+    "why_now": "OpenAI's speed obsession signals the market moving fast—Jason needs a system that keeps pace with headlines automatically rather than falling behind.",
+    "smallest": "Wire up n8n to pull 5 tech headlines hourly, send each through Claude with a prompt that extracts \"Why this matters\" + \"Could build X with this\", store results in Supabase, then display today's findings as a simple searchable table.",
+    "tags": [
+      "PORTFOLIO",
+      "ADVENTURE",
+      "HELPS"
+    ],
+    "flagged": false
   }
 ]

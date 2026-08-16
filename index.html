@@ -174,6 +174,23 @@
   .rate-lbl { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.1em; color: var(--muted); margin-top: 0.35rem; }
   .rates-asof { font-family: var(--mono); font-size: 0.6rem; color: var(--muted); text-align: right; margin-top: -0.5rem; }
 
+  .ai-topic {
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .ai-topic:last-of-type { border-bottom: none; padding-bottom: 0; }
+  .ai-topic-title {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+  .ai-topic p {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #c8c8c0;
+  }
+
   .funnel-step {
     font-size: 0.88rem;
     line-height: 1.6;
@@ -206,6 +223,18 @@
     font-size: 1.5rem;
     color: var(--text);
     line-height: 1.2;
+  }
+
+  .vote-tool {
+    font-size: 0.8rem;
+    color: var(--accent3);
+  }
+  .vote-tool .step-lbl {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-right: 0.3rem;
   }
 
   .vote-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
@@ -342,20 +371,20 @@
   <div class="header-right">
     
   <div class="weather">
-    <span class="wx-emoji">☁️</span>
-    <span class="wx-temp">79°</span>
+    <span class="wx-emoji">🌤️</span>
+    <span class="wx-temp">75°</span>
     <div class="wx-meta">
       <div class="wx-loc">Katy, TX</div>
-      <div class="wx-detail">H 90° · L 73° · 💨 1 mph · 6% rain</div>
+      <div class="wx-detail">H 84° · L 65° · 💨 8 mph · 9% rain</div>
     </div>
   </div>
-    <div class="timestamp">Saturday, August 15, 2026 — 10:29 PM CT<br>Powered by Claude + local stack</div>
+    <div class="timestamp">Saturday, August 15, 2026 — 11:01 PM CT<br>Powered by Claude + local stack</div>
   </div>
 </header>
 
   <div class="quote-band">
-    <div class="quote-text q-lg">“Three things cannot long be hidden: the sun, the moon, and the truth.”</div>
-    <div class="quote-author">— The Buddha</div>
+    <div class="quote-text q-lg">“Hope is the thing with feathers that perches in the soul.”</div>
+    <div class="quote-author">— Emily Dickinson</div>
   </div>
 <div class="grid">
 
@@ -366,25 +395,17 @@
                 <span class="count-badge">1</span>
             </div>
             
-            <div class="funnel-step">
-                <span class="step-lbl">WHAT&#X27;S NEW</span>
-                <p>OpenAI is prioritizing speed in frontier AI model development, while new tools enable building self-updating work &quot;Second Brains&quot; that continuously learn and organize information without manual intervention.</p>
+            <div class="ai-topic">
+                <div class="ai-topic-title">OpenAI&#x27;s Speed Imperative</div>
+                <p>OpenAI is prioritizing velocity in model releases and capability deployment, signaling a shift toward rapid iteration over lengthy deliberation cycles. The company appears to be racing against competitors like Anthropic and Google to establish dominance in frontier AI capabilities, with the underlying pressure coming from both investor expectations and the sense that early mover advantage in advanced reasoning or multimodal systems could determine market leadership. For teams evaluating AI vendors, this means OpenAI&#x27;s product roadmap will likely accelerate, making it worth checking their updates monthly rather than quarterly if you&#x27;re building on their APIs.</p>
+            </div>
+            <div class="ai-topic">
+                <div class="ai-topic-title">Personal Knowledge Management Systems</div>
+                <p>There&#x27;s emerging focus on building &quot;second brains&quot;—digital systems that capture, organize, and autonomously surface relevant information for knowledge workers—with the key innovation being self-updating mechanisms rather than manual curation. Tools in this space now integrate with email, documents, and chat platforms to automatically categorize and resurface insights without requiring users to manually file or tag everything. If you&#x27;re drowning in Slack messages and emails, experimenting with tools like Obsidian with AI plugins or purpose-built platforms like Mem or Logseq could cut your daily context-switching overhead by letting the system surface what matters to you without prompting.</p>
             </div>
             <div class="funnel-step">
-                <span class="step-lbl">WHAT IT UNLOCKS</span>
-                <p>Teams can now automate knowledge management systems that independently gather, synthesize, and surface relevant information, reducing time spent on manual documentation and information retrieval by significant margins.</p>
-            </div>
-            <div class="funnel-step">
-                <span class="step-lbl">WHY IT MATTERS</span>
-                <p>As AI competition intensifies on capability and release speed, the ability to augment human cognition with self-updating systems becomes a competitive advantage for organizations needing to process information faster than traditional methods allow.</p>
-            </div>
-            <div class="funnel-step">
-                <span class="step-lbl">HOW TO TRY IT</span>
-                <p>Implement a Second Brain tool like Obsidian with AI plugins, or explore platforms like Notion AI or similar integrations that auto-capture meeting notes, emails, and research to build interconnected knowledge graphs that surface insights without prompting.</p>
-            </div>
-            <div class="funnel-step">
-                <span class="step-lbl">WHERE IT COULD LEAD</span>
-                <p>This could evolve toward fully autonomous knowledge systems that predict information needs before they arise and proactively suggest connections, fundamentally changing how organizations make decisions and compete on speed in fast-moving markets.</p>
+                <span class="step-lbl">WHERE THIS LEADS</span>
+                <p>The combination of faster AI capability releases and smarter information systems suggests the practical advantage increasingly goes to teams that can both adopt new tools quickly and synthesize information efficiently—making the human bottleneck less about access to capability and more about filtering signal from noise.</p>
             </div>
             <div class="articles">
                 <div class="articles-label">LATEST</div>
@@ -394,27 +415,27 @@
                     <span class="art-meta"><span class="src">The Rundown AI</span><span class="art-age">1d ago</span></span>
                 </a>
             </div>
-            
         </div>
         <div class="card card-signal">
             <div class="card-header">
                 <span class="card-icon">◈</span>
                 <h2>Expansion Signal</h2>
             </div>
-            <div class="funnel-step"><span class="step-lbl">CONNECT THE DOTS</span><p>OpenAI&#x27;s acceleration of frontier model releases reflects the industry-wide race for speed advantage, while the &quot;Second Brain&quot; concept shows how this velocity creates immediate practical demand for tools that help humans keep up with and organize rapidly evolving AI capabilities. The pattern is clear: AI&#x27;s pace of change is outstripping human ability to integrate it into workflows, creating a gap between what&#x27;s possible and what&#x27;s actually usable.</p></div><div class="funnel-step"><span class="step-lbl">THE OPPORTUNITY</span><p>You could build a self-updating knowledge management layer that automatically ingests OpenAI&#x27;s (and competitors&#x27;) capability changes and recommends which new model features map to specific gaps in users&#x27; existing AI workflows -- essentially a &quot;capability-to-workflow adapter&quot; that doesn&#x27;t require users to manually research and experiment with each new release. This captures value at the intersection of speed and usability, where the friction is highest right now.</p></div>
+            <div class="funnel-step"><span class="step-lbl">CONNECT THE DOTS</span><p>OpenAI&#x27;s speed-focused development cycle mirrors the broader industry push toward AI systems that continuously learn and adapt rather than static releases. The &quot;Second Brain&quot; concept shows users now expect their tools to become more capable over time without manual intervention, which only works when the underlying models and platforms iterate rapidly.</p></div><div class="funnel-step"><span class="step-lbl">THE OPPORTUNITY</span><p>You can build tools that wrap OpenAI&#x27;s latest models with persistent memory layers and self-improving workflows -- the market is shifting toward AI assistants that get better at specific tasks the more they&#x27;re used by a given person or team, and you could position such a tool as the bridge between cutting-edge models and the enterprise customers who want stability with automatic capability gains.</p></div>
         </div>
         <div class="card card-vote">
             <div class="card-header">
                 <span class="card-icon">△</span>
                 <h2>Project Vote</h2>
             </div>
-            <div class="vote-title">Speed-Optimized Workflow Analyzer</div>
-            <div class="vote-tags"><span class="vote-tag">💰 Money</span><span class="vote-tag">🎯 Portfolio</span><span class="vote-tag">🎉 Fun</span></div>
-            <div class="funnel-step"><span class="step-lbl">THE IDEA</span><p>Build a tool that measures and benchmarks your actual AI tool response times across different providers/models, then recommends faster alternatives for your repeated tasks.</p></div><div class="funnel-step"><span class="step-lbl">WHY NOW</span><p>OpenAI&#x27;s emphasis on inference speed as a competitive frontier means the speed gap between models is widening fast—what was acceptable last month might be slow today, and you need visibility into where you&#x27;re actually losing time.</p></div><div class="funnel-step"><span class="step-lbl">SMALLEST VERSION</span><p>Create a Make.com workflow that logs response times for your 3 most-used AI tasks (e.g., Claude API call + GPT call + local model), stores them in a spreadsheet with timestamps, and flags when one provider consistently outperforms another by &gt;20%.</p></div>
+            <div class="vote-title">Rapid-Fire Research Digest Engine</div>
+            <div class="vote-tool"><span class="step-lbl">BUILT WITH</span> n8n + Claude API + Supabase</div>
+            <div class="vote-tags"><span class="vote-tag">🎯 Portfolio</span><span class="vote-tag">🚀 Adventure</span><span class="vote-tag">🤝 Helps Others</span></div>
+            <div class="funnel-step"><span class="step-lbl">THE IDEA</span><p>Build a daily-updated knowledge base that ingests trending AI/tech headlines, extracts actionable insights, and serves them back as structured briefing cards without manual curation.</p></div><div class="funnel-step"><span class="step-lbl">WHY NOW</span><p>OpenAI&#x27;s speed obsession signals the market moving fast—Jason needs a system that keeps pace with headlines automatically rather than falling behind.</p></div><div class="funnel-step"><span class="step-lbl">SMALLEST VERSION</span><p>Wire up n8n to pull 5 tech headlines hourly, send each through Claude with a prompt that extracts &quot;Why this matters&quot; + &quot;Could build X with this&quot;, store results in Supabase, then display today&#x27;s findings as a simple searchable table.</p></div>
             
             <div class="vote-trail">
                 <div class="articles-label">RECENT VOTES</div>
-                <div class="vote-trail-row"><span class="vt-date">2026-08-16</span><span class="vt-title">Real-Time News-to-Action Pipeline</span></div><div class="vote-trail-row"><span class="vt-date">2026-08-16</span><span class="vt-title">Auto-Updating Work Brain</span></div>
+                <div class="vote-trail-row"><span class="vt-date">2026-08-16</span><span class="vt-title">Speed-Optimized Workflow Analyzer</span></div><div class="vote-trail-row"><span class="vt-date">2026-08-16</span><span class="vt-title">Real-Time News-to-Action Pipeline</span></div><div class="vote-trail-row"><span class="vt-date">2026-08-16</span><span class="vt-title">Auto-Updating Work Brain</span></div>
             </div>
         </div>
         <div class="card card-disc">
@@ -512,27 +533,27 @@
             <div class="card-header">
                 <span class="card-icon">▦</span>
                 <h2>Gaming</h2>
-                <span class="count-badge">16</span>
+                <span class="count-badge">15</span>
             </div>
             
             <div class="funnel-step">
                 <span class="step-lbl">RELEASES / UPDATES</span>
-                <p>Kingdom Hearts 4 confirmed for late 2027 launch with developers Tai Yasue and Tetsuya Nomura asserting &quot;100%&quot; there will be no delay; a Disney+ animated series was also announced alongside an extended gameplay trailer featuring playable Mickey, Donald, and Goofy.</p>
+                <p>Kingdom Hearts 4 is confirmed for a late 2027 launch window on PS5/PC, with an extended gameplay trailer now available featuring playable Mickey, Donald, and Goofy alongside a new Disney+ animated series announcement.</p>
             </div>
             <div class="funnel-step">
                 <span class="step-lbl">WHAT MATTERS</span>
-                <p>Marvel&#x27;s X-Men reboot cast revealed for 2028 with Adam Driver, Inde Navarrette, and Christopher Abbott; a disc-free PlayStation could theoretically increase competition among publishers and drive game prices down.</p>
+                <p>Series creator Tetsuya Nomura and co-director Tai Yasue publicly guaranteed the late 2027 release is &quot;100%&quot; locked in with no delays, signaling Square Enix&#x27;s confidence in the franchise&#x27;s next major installment.</p>
             </div>
             <div class="funnel-step">
                 <span class="step-lbl">WHAT TO WATCH</span>
-                <p>The new Avengers: Doomsday trailer provides the best look yet at Robert Downey Jr.&#x27;s Doctor Doom; a Kingdom Hearts feature film remains a possibility according to Disney Animation Studios boss Jared Bush.</p>
+                <p>The Kingdom Hearts 4 Disney+ anime series represents a significant expansion of the franchise&#x27;s media presence beyond games, potentially setting up story elements or character introductions relevant to the 2027 game launch.</p>
             </div>
             <div class="articles">
                 <div class="articles-label">LATEST</div>
                 
                 <a href="https://www.ign.com/articles/i-want-to-set-the-record-straight-that-is-not-happening-kingdom-hearts-4-devs-say-kh4-100-will-not-be-delayed-past-late-2027-launch-d23-2026" target="_blank" class="article-link">
                     <span class="art-title"><span class="new-dot"></span>'I Want to Set the Record Straight: That Is Not Happening' — Kingdom Hearts 4 Devs Say KH4 '100%' Will Not Be Delayed Past Late 2027 Launch | D23 2026</span>
-                    <span class="art-meta"><span class="src">IGN</span><span class="art-age">2h ago</span></span>
+                    <span class="art-meta"><span class="src">IGN</span><span class="art-age">3h ago</span></span>
                 </a>
                 <a href="https://www.ign.com/articles/kingdom-hearts-4-gets-extended-gameplay-trailer-featuring-playable-mickey-donald-and-goofy-d23-2026" target="_blank" class="article-link">
                     <span class="art-title"><span class="new-dot"></span>Kingdom Hearts 4 Gets Extended Gameplay Trailer Featuring Playable Mickey, Donald, and Goofy | D23 2026</span>
@@ -540,7 +561,7 @@
                 </a>
                 <a href="https://kotaku.com/saber-ceo-apologizes-to-lead-writer-replaced-with-chatgpt-after-weeklong-crashout-2000724730" target="_blank" class="article-link">
                     <span class="art-title"><span class="new-dot"></span>Saber CEO Apologizes To Lead Writer Replaced With ChatGPT After Weeklong Crashout</span>
-                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">3h ago</span></span>
+                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">4h ago</span></span>
                 </a>
                 <a href="https://www.ign.com/articles/d23-deep-dive-into-kingdom-hearts-panel-everything-announced-updating-live" target="_blank" class="article-link">
                     <span class="art-title"><span class="new-dot"></span>D23 Deep Dive Into Kingdom Hearts Panel: Everything Announced</span>
@@ -548,11 +569,11 @@
                 </a>
                 <a href="https://www.ign.com/articles/best-deals-for-august-15-2026" target="_blank" class="article-link">
                     <span class="art-title"><span class="new-dot"></span>The Best Deals Today: Project Hail Mary 4K Blu-ray, Resident Evil Requiem, AirPods Pro 3, and More</span>
-                    <span class="art-meta"><span class="src">IGN</span><span class="art-age">6h ago</span></span>
+                    <span class="art-meta"><span class="src">IGN</span><span class="art-age">7h ago</span></span>
                 </a>
                 <a href="https://kotaku.com/teenage-sex-and-death-at-camp-miasma-wants-to-have-its-cake-and-splatter-it-too-2000724725" target="_blank" class="article-link">
-                    <span class="art-title"><span class="new-dot"></span>Teenage Sex and Death at Camp Miasma Wants To Have Its Cake And Splatter It Too</span>
-                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">7h ago</span></span>
+                    <span class="art-title">Teenage Sex and Death at Camp Miasma Wants To Have Its Cake And Splatter It Too</span>
+                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">8h ago</span></span>
                 </a>
                 <a href="https://kotaku.com/rare-two-player-version-of-first-arcade-game-up-for-auction-from-shiny-entertainment-founder-2000724719" target="_blank" class="article-link">
                     <span class="art-title">Rare Two-Player Version Of First Arcade Game Up For Auction From Shiny Entertainment Founder</span>
@@ -560,7 +581,7 @@
                 </a>
                 <a href="https://kotaku.com/former-square-enix-exec-believes-disc-free-playstation-will-drive-game-prices-down-2000724716" target="_blank" class="article-link">
                     <span class="art-title">Here’s The Argument For Why A Disc-Free PlayStation Could Actually Drive Game Prices Down</span>
-                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">10h ago</span></span>
+                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">11h ago</span></span>
                 </a>
                 <a href="https://www.ign.com/articles/100-marvels-spider-man-games-with-one-month-of-free-ign-guides-checklists" target="_blank" class="article-link">
                     <span class="art-title">100% Marvel's Spider-Man Games with One Month of Free IGN Guides Checklists</span>
@@ -572,11 +593,11 @@
                 </a>
                 <a href="https://kotaku.com/simpsons-creator-says-gta-like-hit-run-game-is-coming-back-maybe-2000724708" target="_blank" class="article-link">
                     <span class="art-title">Simpsons Creator Says GTA-Like Hit & Run Game Is Coming Back, Maybe</span>
-                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">12h ago</span></span>
+                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">13h ago</span></span>
                 </a>
                 <a href="https://www.ign.com/articles/i-hope-gta-6-borrows-a-lot-from-gta-4" target="_blank" class="article-link">
                     <span class="art-title">I Hope GTA 6 Borrows a Lot From GTA 4</span>
-                    <span class="art-meta"><span class="src">IGN</span><span class="art-age">15h ago</span></span>
+                    <span class="art-meta"><span class="src">IGN</span><span class="art-age">16h ago</span></span>
                 </a>
             </div>
             
