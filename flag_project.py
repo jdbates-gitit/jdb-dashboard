@@ -60,6 +60,8 @@ def print_details(e):
     print("-" * 60)
     if e.get("idea"):
         print(f"Idea:      {e['idea']}")
+    if e.get("tool"):
+        print(f"Tool:      {e['tool']}")
     if e.get("why_now"):
         print(f"Why now:   {e['why_now']}")
     if e.get("smallest"):

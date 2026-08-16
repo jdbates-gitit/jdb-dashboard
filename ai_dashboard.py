@@ -445,6 +445,118 @@ def get_tournaments():
     return out
 
 
+CATEGORY_FOCUS = {
+    "Gaming": (
+        "Focus ONLY on PlayStation/PS5 and PC gaming news. If a headline is "
+        "about another platform (Nintendo Switch, Xbox, mobile) with no "
+        "PS5/PC relevance, ignore it entirely rather than covering it. If "
+        "none of today's headlines are PS5/PC-relevant, say so honestly "
+        "in the RELEASE step rather than reaching for an off-platform story."
+    ),
+}
+
+
+# Keyword filter for Gaming headlines -- keeps the "Latest" headline list
+# consistent with the PS5/PC-only focus given to the funnel summary below.
+# Simple and imperfect (a PS5 story that happens to mention "Xbox" in a
+# comparison could get caught), but a reasonable first pass; worth revisiting
+# if it's over- or under-filtering once you've seen it run for a while.
+GAMING_EXCLUDE_KEYWORDS = [
+    "nintendo switch", "switch 2", "xbox series", "xbox game pass",
+    "nintendo direct", "steam deck", "ios", "android", "mobile game",
+    "vr headset", "quest 3", "quest 2",
+]
+GAMING_KEEP_KEYWORDS = ["ps5", "playstation", "pc gaming", "steam", "epic games", " pc "]
+
+
+def filter_gaming_items(items):
+    kept = []
+    for it in items:
+        text = f"{it['title']} {it['desc']}".lower()
+        has_exclude = any(kw in text for kw in GAMING_EXCLUDE_KEYWORDS)
+        has_keep = any(kw in text for kw in GAMING_KEEP_KEYWORDS)
+        # Drop only if it clearly mentions an excluded platform AND has no
+        # PS5/PC signal at all -- ambiguous/platform-agnostic items stay in.
+        if has_exclude and not has_keep:
+            continue
+        kept.append(it)
+    return kept
+
+
+def generate_ai_topics(client, ai_items):
+    """AI & Technology gets multi-story depth instead of one blended
+    summary: up to 3 distinct topics (grouped by company/technology, not
+    headline-by-headline), each with its own short writeup, plus one
+    capstone line on where it collectively leads."""
+    if not ai_items:
+        return {"topics": [], "leads": "No AI & Technology headlines today."}
+
+    lines = [f"- {it['title']}: {it['desc']}" for it in ai_items[:MAX_SUMMARY_LINES]]
+    prompt = f"""You are writing the AI & Technology section of Jason's personal daily
+briefing. Jason wants real breadth here -- distinct companies, tools, and
+technologies each getting their own short writeup, not one blended
+summary that flattens everything into a single paragraph.
+
+Headlines:
+{chr(10).join(lines)}
+
+Identify up to 3 DISTINCT topics from today's headlines, grouped by
+company/technology/theme -- group headlines that are genuinely the same
+story together, but keep genuinely different stories separate. For each
+topic, write:
+
+TOPIC1_TITLE: short title, a few words -- the company or technology name.
+TOPIC1_BODY: 3-5 sentences: what's actually new, why it matters, and one
+practical takeaway or way to try it -- specific, with names/numbers/dates,
+no filler. Flowing prose, not a list.
+
+Repeat as TOPIC2_TITLE/TOPIC2_BODY and TOPIC3_TITLE/TOPIC3_BODY. If there
+are genuinely fewer than 3 distinct topics today, write TOPIC2_TITLE: NONE
+(and/or TOPIC3_TITLE: NONE) for the ones that don't apply -- don't invent
+a topic just to fill the slot.
+
+Then write:
+LEADS: 1-2 sentences on where this collectively could lead -- the
+bigger-picture direction across today's topics combined, not a recap.
+
+Plain text only, no markdown, no bullets."""
+
+    try:
+        msg = client.messages.create(
+            model=MODEL, max_tokens=600,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = msg.content[0].text.strip()
+    except Exception as e:
+        log.warning("  ERR AI topics: %s", e)
+        return {"topics": [], "leads": f"AI & Technology summary unavailable: {e}"}
+
+    topics = []
+    for i in (1, 2, 3):
+        tm = re.search(rf"^TOPIC{i}_TITLE:\s*(.+?)(?=\n[A-Z0-9_]+:|\Z)", text, re.MULTILINE | re.DOTALL)
+        bm = re.search(rf"^TOPIC{i}_BODY:\s*(.+?)(?=\n[A-Z0-9_]+:|\Z)", text, re.MULTILINE | re.DOTALL)
+        if not tm:
+            continue
+        title = re.sub(r"\s+", " ", tm.group(1)).strip()
+        if title.upper() == "NONE":
+            continue
+        body = re.sub(r"\s+", " ", bm.group(1)).strip() if bm else ""
+        if body:
+            topics.append({"title": title, "body": body})
+
+    leads = ""
+    lm = re.search(r"^LEADS:\s*(.+?)(?=\n[A-Z0-9_]+:|\Z)", text, re.MULTILINE | re.DOTALL)
+    if lm:
+        leads = re.sub(r"\s+", " ", lm.group(1)).strip()
+
+    if not topics and not leads:
+        # Parsing failed entirely -- fall back to showing the raw text
+        # rather than silently losing the whole section.
+        topics = [{"title": "AI & Technology", "body": text}]
+
+    return {"topics": topics, "leads": leads}
+
+
 def summarize_news(client, category, items):
     """Return an OrderedDict of {step_key: step_text} following that
     category's funnel depth (CATEGORY_STEPS), or a single-key dict with an
@@ -458,9 +570,11 @@ def summarize_news(client, category, items):
         f"{key}: {label} \u2014 1-2 sentences, specific (names, numbers, facts), no filler."
         for key, label in steps
     )
+    focus_line = CATEGORY_FOCUS.get(category, "")
 
     prompt = f"""You are writing one section of Jason's personal daily briefing.
 Category: {category}
+{focus_line}
 
 Headlines:
 {chr(10).join(lines)}
@@ -573,9 +687,16 @@ def generate_project_vote(client, ai_items):
     persisted log so patterns across days become visible over time."""
     vote_log = load_vote_log()
     recent_titles = [v["title"] for v in vote_log[-6:]]
+    recent_tools = [v["tool"] for v in vote_log[-8:] if v.get("tool")]
     avoid_line = (
         f"Avoid repeating or lightly rewording these recent picks: {'; '.join(recent_titles)}."
         if recent_titles else ""
+    )
+    tool_repeat_line = (
+        f"You've reached for these tools recently: {', '.join(recent_tools)} -- "
+        "don't default back to the same one again today unless a headline "
+        "genuinely calls for it specifically."
+        if recent_tools else ""
     )
 
     if not ai_items:
@@ -589,10 +710,17 @@ briefing: one concrete thing worth building or testing today, drawn from
 today's AI & Technology headlines.
 
 Jason is a technically capable non-developer who builds real tools with AI
-assistance (Make.com, Python scripts, Cloudflare Workers, Claude). He wants
-ideas that could: make money, help others, be genuinely useful to him, be
-fun, be an adventure, or be a portfolio piece -- ideally hitting more than
-one of those at once. {avoid_line}
+assistance. He wants ideas that could: make money, help others, be
+genuinely useful to him, be fun, be an adventure, or be a portfolio piece --
+ideally hitting more than one of those at once.
+
+Don't default to the same small toolkit every time. Actively reach for
+whatever's actually right for today's headline -- including tools he's
+recently been introduced to and wants to explore (Vercel, Supabase, n8n,
+Gamma), the growing wave of cheap and powerful open-source models, or
+anything else genuinely relevant, even something he hasn't tried yet.
+Novelty is a feature here, not a risk -- a stale, repetitive toolkit is
+the actual failure mode to avoid. {tool_repeat_line} {avoid_line}
 
 Headlines:
 {chr(10).join(lines)}
@@ -601,6 +729,7 @@ Write exactly these labeled parts, plain text, no markdown, no bullets:
 
 TITLE: A short project name, a few words.
 IDEA: 1 sentence naming the build idea itself.
+TOOL: The specific tool/platform this idea is actually built with (a few words -- e.g. "Vercel + Supabase", "n8n", "an open-source model via Ollama"). Be specific, not generic.
 WHY_NOW: 1 sentence on why this specific headline/moment makes it timely.
 SMALLEST: 1 sentence describing the smallest version worth actually building today.
 TAGS: 2-3 tags from this exact list, comma-separated, choosing only ones that genuinely apply: {tag_list}"""
@@ -616,7 +745,7 @@ TAGS: 2-3 tags from this exact list, comma-separated, choosing only ones that ge
         return {"IDEA": f"Project vote unavailable: {e}", "tags": []}
 
     result = {}
-    for key in ("TITLE", "IDEA", "WHY_NOW", "SMALLEST"):
+    for key in ("TITLE", "IDEA", "TOOL", "WHY_NOW", "SMALLEST"):
         m = re.search(rf"^{key}:\s*(.+?)(?=\n[A-Z_]+:|\Z)", text, re.MULTILINE | re.DOTALL)
         if m:
             result[key] = re.sub(r"\s+", " ", m.group(1)).strip()
@@ -636,6 +765,7 @@ TAGS: 2-3 tags from this exact list, comma-separated, choosing only ones that ge
             "date": _date.today().isoformat(),
             "title": result["TITLE"],
             "idea": result.get("IDEA", ""),
+            "tool": result.get("TOOL", ""),
             "why_now": result.get("WHY_NOW", ""),
             "smallest": result.get("SMALLEST", ""),
             "tags": tags,
@@ -733,6 +863,25 @@ def quote_band_html(quote):
   </div>"""
 
 
+def ai_topics_html(result):
+    topics = result.get("topics", [])
+    blocks = ""
+    for t in topics:
+        blocks += f"""
+            <div class="ai-topic">
+                <div class="ai-topic-title">{html.escape(t['title'])}</div>
+                <p>{html.escape(t['body'])}</p>
+            </div>"""
+    leads = result.get("leads", "")
+    if leads:
+        blocks += f"""
+            <div class="funnel-step">
+                <span class="step-lbl">WHERE THIS LEADS</span>
+                <p>{html.escape(leads)}</p>
+            </div>"""
+    return blocks
+
+
 def funnel_html(steps, result):
     blocks = ""
     for key, label in steps:
@@ -764,6 +913,11 @@ def project_vote_html(result):
     )
     tag_row = f'<div class="vote-tags">{tag_pills}</div>' if tag_pills else ""
 
+    tool_badge = (
+        f'<div class="vote-tool"><span class="step-lbl">BUILT WITH</span> {html.escape(result["TOOL"])}</div>'
+        if result.get("TOOL") else ""
+    )
+
     blocks = ""
     for key, label in (("IDEA", "The idea"), ("WHY_NOW", "Why now"), ("SMALLEST", "Smallest version")):
         if result.get(key):
@@ -784,7 +938,7 @@ def project_vote_html(result):
                 {rows}
             </div>"""
 
-    return result.get("TITLE", ""), tag_row, blocks, recent_html
+    return result.get("TITLE", ""), tool_badge, tag_row, blocks, recent_html
 
 
 def build_html(cards, weather, tournaments, quote):
@@ -799,7 +953,7 @@ def build_html(cards, weather, tournaments, quote):
         css_class = card["css_class"]
 
         if kind == "vote":
-            title, tag_row, blocks, recent_html = project_vote_html(card["result"])
+            title, tool_badge, tag_row, blocks, recent_html = project_vote_html(card["result"])
             title_html = f'<div class="vote-title">{html.escape(title)}</div>' if title else ""
             cards_html += f"""
         <div class="card {css_class}">
@@ -808,6 +962,7 @@ def build_html(cards, weather, tournaments, quote):
                 <h2>{category}</h2>
             </div>
             {title_html}
+            {tool_badge}
             {tag_row}
             {blocks}
             {recent_html}
@@ -826,7 +981,25 @@ def build_html(cards, weather, tournaments, quote):
         </div>"""
             continue
 
-        # kind == "funnel" -- AI & Technology, Disc Golf, Gaming
+        if kind == "ai_topics":
+            items = card["items"]
+            blocks = ai_topics_html(card["result"])
+            cards_html += f"""
+        <div class="card {css_class}">
+            <div class="card-header">
+                <span class="card-icon">{icon}</span>
+                <h2>{category}</h2>
+                <span class="count-badge">{len(items)}</span>
+            </div>
+            {blocks}
+            <div class="articles">
+                <div class="articles-label">LATEST</div>
+                {headlines_html(items)}
+            </div>
+        </div>"""
+            continue
+
+        # kind == "funnel" -- Disc Golf, Gaming
         items = card["items"]
         blocks = funnel_html(CATEGORY_STEPS[category], card["result"])
         extra_block = tournaments_html(tournaments) if category == "Disc Golf" else ""
@@ -1021,6 +1194,23 @@ def build_html(cards, weather, tournaments, quote):
   .rate-lbl {{ font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.1em; color: var(--muted); margin-top: 0.35rem; }}
   .rates-asof {{ font-family: var(--mono); font-size: 0.6rem; color: var(--muted); text-align: right; margin-top: -0.5rem; }}
 
+  .ai-topic {{
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--border);
+  }}
+  .ai-topic:last-of-type {{ border-bottom: none; padding-bottom: 0; }}
+  .ai-topic-title {{
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }}
+  .ai-topic p {{
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #c8c8c0;
+  }}
+
   .funnel-step {{
     font-size: 0.88rem;
     line-height: 1.6;
@@ -1053,6 +1243,18 @@ def build_html(cards, weather, tournaments, quote):
     font-size: 1.5rem;
     color: var(--text);
     line-height: 1.2;
+  }}
+
+  .vote-tool {{
+    font-size: 0.8rem;
+    color: var(--accent3);
+  }}
+  .vote-tool .step-lbl {{
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-right: 0.3rem;
   }}
 
   .vote-tags {{ display: flex; flex-wrap: wrap; gap: 0.5rem; }}
@@ -1286,9 +1488,9 @@ def main():
 
     cards = []
 
-    log.info("[AI & Technology] -> Summarizing with Claude...")
-    ai_result = summarize_news(client, "AI & Technology", ai_items)
-    cards.append({"kind": "funnel", "category": "AI & Technology", "css_class": "card-ai",
+    log.info("[AI & Technology] -> Breaking out topics with Claude...")
+    ai_result = generate_ai_topics(client, ai_items)
+    cards.append({"kind": "ai_topics", "category": "AI & Technology", "css_class": "card-ai",
                   "result": ai_result, "items": ai_items})
 
     log.info("[Expansion Signal] -> Synthesizing with Claude...")
@@ -1307,7 +1509,7 @@ def main():
     cards.append({"kind": "funnel", "category": "Disc Golf", "css_class": "card-disc",
                   "result": disc_result, "items": disc_items})
 
-    gaming_items = items_by_category.get("Gaming", [])
+    gaming_items = filter_gaming_items(items_by_category.get("Gaming", []))
     log.info("[Gaming] -> Summarizing with Claude...")
     gaming_result = summarize_news(client, "Gaming", gaming_items)
     cards.append({"kind": "funnel", "category": "Gaming", "css_class": "card-gaming",
