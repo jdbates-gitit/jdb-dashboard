@@ -16,6 +16,8 @@
     --accent:  #c8f060;
     --accent2: #60c8f0;
     --accent3: #f0a060;
+    --accent4: #d060f0;
+    --accent5: #60f0a8;
     --text:    #e8e8e0;
     --muted:   #888880;
     --serif:   'DM Serif Display', Georgia, serif;
@@ -134,8 +136,10 @@
 
   .card-header { display: flex; align-items: center; gap: 0.75rem; }
   .card-icon   { font-size: 1.3rem; color: var(--accent); line-height: 1; }
-  .card:nth-child(2) .card-icon { color: var(--accent2); }
-  .card:nth-child(3) .card-icon { color: var(--accent3); }
+  .card-signal .card-icon { color: var(--accent2); }
+  .card-vote   .card-icon { color: var(--accent3); }
+  .card-disc   .card-icon { color: var(--accent4); }
+  .card-gaming .card-icon { color: var(--accent5); }
 
   h2 {
     font-family: var(--serif);
@@ -170,40 +174,68 @@
   .rate-lbl { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.1em; color: var(--muted); margin-top: 0.35rem; }
   .rates-asof { font-family: var(--mono); font-size: 0.6rem; color: var(--muted); text-align: right; margin-top: -0.5rem; }
 
-  .summary {
+  .funnel-step {
     font-size: 0.88rem;
-    line-height: 1.65;
+    line-height: 1.6;
     color: #c8c8c0;
-    padding: 1rem 1.1rem;
+    padding: 0.85rem 1.1rem;
     background: rgba(255,255,255,0.03);
     border-left: 2px solid var(--accent);
     border-radius: 0 4px 4px 0;
   }
-  .card:nth-child(2) .summary { border-left-color: var(--accent2); }
-  .card:nth-child(3) .summary { border-left-color: var(--accent3); }
-
-  .takeaway {
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--text);
-    padding: 0.2rem 0.1rem;
-  }
-  .takeaway-lbl {
+  .funnel-step .step-lbl {
+    display: block;
     font-family: var(--mono);
-    font-size: 0.55rem;
+    font-size: 0.58rem;
     letter-spacing: 0.15em;
     color: var(--accent);
-    background: rgba(200,240,96,0.1);
-    border: 1px solid rgba(200,240,96,0.25);
-    padding: 0.15rem 0.45rem;
-    border-radius: 4px;
-    flex-shrink: 0;
+    margin-bottom: 0.35rem;
   }
-  .card:nth-child(2) .takeaway-lbl { color: var(--accent2); background: rgba(96,200,240,0.1); border-color: rgba(96,200,240,0.25); }
-  .card:nth-child(3) .takeaway-lbl { color: var(--accent3); background: rgba(240,160,96,0.1); border-color: rgba(240,160,96,0.25); }
+  .funnel-step p { color: #c8c8c0; }
+  .card-signal .funnel-step { border-left-color: var(--accent2); }
+  .card-signal .funnel-step .step-lbl { color: var(--accent2); }
+  .card-vote .funnel-step { border-left-color: var(--accent3); }
+  .card-vote .funnel-step .step-lbl { color: var(--accent3); }
+  .card-disc .funnel-step { border-left-color: var(--accent4); }
+  .card-disc .funnel-step .step-lbl { color: var(--accent4); }
+  .card-gaming .funnel-step { border-left-color: var(--accent5); }
+  .card-gaming .funnel-step .step-lbl { color: var(--accent5); }
+
+  .vote-title {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .vote-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .vote-tag {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.05em;
+    color: var(--accent3);
+    background: rgba(240,160,96,0.1);
+    border: 1px solid rgba(240,160,96,0.25);
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .vote-trail { display: flex; flex-direction: column; gap: 0.1rem; }
+  .vote-trail-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+  }
+  .vote-trail-row:last-child { border-bottom: none; }
+  .vt-date { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); flex-shrink: 0; }
+  .vt-title { color: #b8b8b0; }
+  .vote-trail-row.flagged { background: rgba(240,160,96,0.06); border-radius: 4px; padding-left: 0.4rem; }
+  .vote-trail-row.flagged .vt-title { color: var(--text); }
+  .vt-star { color: var(--accent3); font-size: 0.7rem; flex-shrink: 0; }
 
   .articles { display: flex; flex-direction: column; gap: 0.1rem; }
   .articles-label {
@@ -310,32 +342,50 @@
   <div class="header-right">
     
   <div class="weather">
-    <span class="wx-emoji">⛅</span>
-    <span class="wx-temp">63°</span>
+    <span class="wx-emoji">☀️</span>
+    <span class="wx-temp">65°</span>
     <div class="wx-meta">
       <div class="wx-loc">Katy, TX</div>
-      <div class="wx-detail">H 74° · L 58° · 💨 3 mph</div>
+      <div class="wx-detail">H 75° · L 59° · 💨 8 mph</div>
     </div>
   </div>
-    <div class="timestamp">Saturday, August 15, 2026 — 12:18 PM CT<br>Powered by Claude + local stack</div>
+    <div class="timestamp">Saturday, August 15, 2026 — 09:42 PM CT<br>Powered by Claude + local stack</div>
   </div>
 </header>
 
   <div class="quote-band">
-    <div class="quote-text q-md">“Between stimulus and response there is a space. In that space is our power to choose our response.”</div>
-    <div class="quote-author">— Viktor Frankl</div>
+    <div class="quote-text q-lg">“Real knowledge is to know the extent of one&#x27;s ignorance.”</div>
+    <div class="quote-author">— Confucius</div>
   </div>
 <div class="grid">
 
-        <div class="card">
+        <div class="card card-ai">
             <div class="card-header">
                 <span class="card-icon">⬡</span>
-                <h2>🤖 AI & Technology</h2>
-                <span class="count-badge">2</span>
+                <h2>AI & Technology</h2>
+                <span class="count-badge">1</span>
             </div>
             
-            <div class="summary">OpenAI is accelerating its product release cycle, prioritizing speed-to-market as competition intensifies in the frontier model space. Meanwhile, enterprises are building autonomous "Second Brain" systems that self-update without manual intervention, fundamentally shifting how knowledge work gets done. The summer 2026 open models landscape shows significant maturation—Claude, Llama, and Mistral variants are closing capability gaps with frontier labs, putting pricing and accessibility pressure on closed models. This dual dynamic means competitive advantage is shifting from model weights alone to deployment speed and agentic autonomy.</div>
-            <div class="takeaway"><span class="takeaway-lbl">TAKEAWAY</span>Speed and autonomy now beat raw capability in AI competition.</div>
+            <div class="funnel-step">
+                <span class="step-lbl">WHAT&#X27;S NEW</span>
+                <p>OpenAI is accelerating its development pace to compete in the frontier AI race, while new tools are emerging to help professionals build self-updating digital second brains for work.</p>
+            </div>
+            <div class="funnel-step">
+                <span class="step-lbl">WHAT IT UNLOCKS</span>
+                <p>These developments enable workers to create automated knowledge management systems that learn and refresh information without manual intervention, and allow OpenAI to ship capabilities faster than competitors like Anthropic and Google DeepMind.</p>
+            </div>
+            <div class="funnel-step">
+                <span class="step-lbl">WHY IT MATTERS</span>
+                <p>Speed-to-market in frontier AI directly impacts which company sets industry standards and captures enterprise adoption, while self-updating second brains could reduce knowledge worker time spent on information maintenance by automating context retrieval and updates.</p>
+            </div>
+            <div class="funnel-step">
+                <span class="step-lbl">HOW TO TRY IT</span>
+                <p>You can explore self-brain tools like Notion AI or specialized second-brain platforms that integrate with your calendar and emails, or monitor OpenAI&#x27;s product releases through their developer blog to adopt new capabilities as they launch.</p>
+            </div>
+            <div class="funnel-step">
+                <span class="step-lbl">WHERE IT COULD LEAD</span>
+                <p>The combination of rapid AI iteration and intelligent personal knowledge systems could shift how enterprises handle institutional knowledge, potentially moving from static documentation to continuously-evolving AI-assisted memory that adapts to individual and organizational needs.</p>
+            </div>
             <div class="articles">
                 <div class="articles-label">LATEST</div>
                 
@@ -343,92 +393,40 @@
                     <span class="art-title">OpenAI feels the frontier need for speed</span>
                     <span class="art-meta"><span class="src">The Rundown AI</span><span class="art-age">1d ago</span></span>
                 </a>
-                <a href="https://huggingface.co/blog/state-of-open-models-summer-2026" target="_blank" class="article-link">
-                    <span class="art-title">State of Open Models: Summer 2026 Observations</span>
-                    <span class="art-meta"><span class="src">Hugging Face Blog</span><span class="art-age">1d ago</span></span>
-                </a>
             </div>
             
         </div>
-        <div class="card">
+        <div class="card card-signal">
             <div class="card-header">
                 <span class="card-icon">◈</span>
-                <h2>🏦 Mortgage & Fintech</h2>
-                <span class="count-badge">12</span>
+                <h2>Expansion Signal</h2>
             </div>
-            <div class="rates"><div class="rate"><div class="rate-val">6.67%</div><div class="rate-lbl">30-YR FIXED</div></div><div class="rate"><div class="rate-val">5.96%</div><div class="rate-lbl">15-YR FIXED</div></div><div class="rate"><div class="rate-val">4.68%</div><div class="rate-lbl">10-YR TREASURY</div></div></div><div class="rates-asof">Rates as of 8/13/2026</div>
-            <div class="summary">Real and REMAX shareholders overwhelmingly approved their merger (99% and 78.8% respectively), with closing expected within two weeks in a major consolidation of the real estate brokerage sector. Mortgage application volume rebounded 3.6% last week as rate declines offered relief to homebuyers and refinancers, though existing-home sales edged down 1.7% in July despite remaining above year-ago levels. Northeast housing markets continue facing acute inventory constraints from Rochester to Boston, keeping buyer competition elevated heading into peak summer season. NYC's pied-à-terre tax on ultra-wealthy non-residents cleared another legal hurdle Thursday after a state appeals court overturned an injunction blocking the rollout.</div>
-            <div class="takeaway"><span class="takeaway-lbl">TAKEAWAY</span>Market consolidation and modest rate relief offsetting persistent inventory headwinds.</div>
-            <div class="articles">
-                <div class="articles-label">LATEST</div>
-                
-                <a href="https://www.housingwire.com/articles/real-remax-shareholder-approval/" target="_blank" class="article-link">
-                    <span class="art-title">Real shareholders approve REMAX acquisition, closing nears</span>
-                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">20h ago</span></span>
-                </a>
-                <a href="https://themortgagereports.com/133624/15-year-home-equity-loan" target="_blank" class="article-link">
-                    <span class="art-title">15-Year Home Equity Loan: Rates, Payments, and Whether the Term Fits You</span>
-                    <span class="art-meta"><span class="src">The Mortgage Reports</span><span class="art-age">20h ago</span></span>
-                </a>
-                <a href="https://www.housingwire.com/articles/summer-heat-sets-in-across-northeast-housing-markets/" target="_blank" class="article-link">
-                    <span class="art-title">Summer heat sets in across Northeast housing markets</span>
-                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">20h ago</span></span>
-                </a>
-                <a href="https://www.housingwire.com/articles/pied-a-terre-lawsuit-moot/" target="_blank" class="article-link">
-                    <span class="art-title">Appeals court reboots NYC pied-à-terre tax rollout after pause</span>
-                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">21h ago</span></span>
-                </a>
-                <a href="https://www.housingwire.com/articles/why-2026-foreclosure-gains-are-not-a-housing-crash-signal/" target="_blank" class="article-link">
-                    <span class="art-title">Why 2026 foreclosure gains are not a housing crash signal</span>
-                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">21h ago</span></span>
-                </a>
-                <a href="https://www.mortgagenewsdaily.com/news/08142026-existing-home-sales-nar-inventory-prices-appr" target="_blank" class="article-link">
-                    <span class="art-title">Existing-Home Sales Ease Slightly, Remain Above Year-Ago Levels</span>
-                    <span class="art-meta"><span class="src">Mortgage News Daily</span><span class="art-age">22h ago</span></span>
-                </a>
-                <a href="https://www.mortgagenewsdaily.com/news/08142026-mortgage-applications-mba" target="_blank" class="article-link">
-                    <span class="art-title">As Expected, Mortgage Apps Bounce in Response to Rate Reversal</span>
-                    <span class="art-meta"><span class="src">Mortgage News Daily</span><span class="art-age">22h ago</span></span>
-                </a>
-                <a href="https://www.housingwire.com/articles/radian-place-title-sale/" target="_blank" class="article-link">
-                    <span class="art-title">Radian sells real estate services, plans title sale to PLACE</span>
-                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">22h ago</span></span>
-                </a>
-                <a href="https://www.housingwire.com/articles/ara-advocacy-john-blount/" target="_blank" class="article-link">
-                    <span class="art-title">ARA expands advocacy, hires John Blount to lead lobbying</span>
-                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">23h ago</span></span>
-                </a>
-                <a href="https://www.housingwire.com/articles/lgi-inventory-strategy-q2/" target="_blank" class="article-link">
-                    <span class="art-title">LGI Homes is trying to remove the reasons buyers keep waiting</span>
-                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">1d ago</span></span>
-                </a>
-                <a href="https://www.housingwire.com/articles/nrmla-cfpb-reverse-mortgage/" target="_blank" class="article-link">
-                    <span class="art-title">NRMLA asks CFPB for new reverse mortgage disclosure framework</span>
-                    <span class="art-meta"><span class="src">HousingWire</span><span class="art-age">1d ago</span></span>
-                </a>
-                <a href="https://themortgagereports.com/133518/alliant-credit-union-mortgage-review-rates-loans-credit-score" target="_blank" class="article-link">
-                    <span class="art-title">Alliant Credit Union Review for 2026: Rates, Loans & Credit Score</span>
-                    <span class="art-meta"><span class="src">The Mortgage Reports</span><span class="art-age">1d ago</span></span>
-                </a>
+            <div class="funnel-step"><span class="step-lbl">CONNECT THE DOTS</span><p>OpenAI&#x27;s push for speed in frontier models and the emergence of self-updating work &quot;second brains&quot; both reflect a market shift toward AI systems that reduce human intervention cycles—speed matters less because it&#x27;s fast, but because it enables continuous autonomous operation. The pattern suggests users are moving beyond static AI applications toward dynamic systems that learn and adapt without requiring constant human prompting or retraining.</p></div><div class="funnel-step"><span class="step-lbl">THE OPPORTUNITY</span><p>You could build a personal knowledge management tool that auto-ingests your work outputs (emails, documents, Slack), continuously synthesizes insights using faster frontier models, and surfaces patterns or decisions without requiring you to manually prompt it each time. The technical moat here is in the architecture that makes continuous update loops practical and safe rather than chaotic, which is something a non-developer can prototype by combining existing APIs with simple automation logic.</p></div>
+        </div>
+        <div class="card card-vote">
+            <div class="card-header">
+                <span class="card-icon">△</span>
+                <h2>Project Vote</h2>
             </div>
+            <div class="vote-title">Auto-Updating Work Brain</div>
+            <div class="vote-tags"><span class="vote-tag">💰 Money</span><span class="vote-tag">🎯 Portfolio</span><span class="vote-tag">🤝 Helps Others</span></div>
+            <div class="funnel-step"><span class="step-lbl">THE IDEA</span><p>Build a self-refreshing personal knowledge base that automatically ingests your emails, docs, and messages, then surfaces relevant context to you via a simple interface—competing on speed and freshness against static note systems.</p></div><div class="funnel-step"><span class="step-lbl">WHY NOW</span><p>OpenAI&#x27;s speed-focused updates and the &quot;Second Brain&quot; trend converging means there&#x27;s real demand for AI tools that keep up with your actual work pace, not just archive it.</p></div><div class="funnel-step"><span class="step-lbl">SMALLEST VERSION</span><p>Create a Make.com workflow that pulls your last 24 hours of emails and Slack messages, summarizes them with Claude, stores results in a simple Airtable, then builds a one-page HTML dashboard showing today&#x27;s auto-generated context by topic.</p></div>
             
         </div>
-        <div class="card">
+        <div class="card card-disc">
             <div class="card-header">
                 <span class="card-icon">◎</span>
-                <h2>🥏 Disc Golf</h2>
-                <span class="count-badge">1</span>
+                <h2>Disc Golf</h2>
+                <span class="count-badge">0</span>
             </div>
             
-            <div class="summary">Tom Odegaard headlines the Preserve Doubles event preview as top contenders prepare for what promises to be a competitive showcase. The tournament, presented by Pound Disc Golf, is drawing attention for its team format dynamics and the creative naming strategies players are bringing to competition. With Odegaard in the field, expect elevated play from both established pros and rising talent looking to make their mark in doubles competition. The event represents a significant mid-season test for partnership chemistry and individual skill under team-based pressure.</div>
-            <div class="takeaway"><span class="takeaway-lbl">TAKEAWAY</span>Doubles format reveals which pros excel beyond individual competition.</div>
+            <div class="funnel-step">
+                <span class="step-lbl">EVENT / NEWS</span>
+                <p>No articles retrieved for this category.</p>
+            </div>
             <div class="articles">
                 <div class="articles-label">LATEST</div>
                 
-                <a href="https://discgolf.ultiworld.com/2026/08/13/the-upshot-preserve-doubles-preview-tom-odegaard-pres-by-pound-disc-golf/" target="_blank" class="article-link">
-                    <span class="art-title">The Upshot: Preserve Doubles Preview, Tom Odegaard [Pres. by Pound Disc Golf]</span>
-                    <span class="art-meta"><span class="src">Ultiworld Disc Golf</span><span class="art-age">1d ago</span></span>
-                </a>
             </div>
             
             <div class="articles tournaments">
@@ -506,7 +504,80 @@
                 </a>
             </div>
         </div>
+        <div class="card card-gaming">
+            <div class="card-header">
+                <span class="card-icon">▦</span>
+                <h2>Gaming</h2>
+                <span class="count-badge">16</span>
+            </div>
+            
+            <div class="funnel-step">
+                <span class="step-lbl">RELEASES / UPDATES</span>
+                <p>Kingdom Hearts 4 is confirmed for a late 2027 launch window with no delays expected, and a Kingdom Hearts animated series is coming to Disney+. An extended gameplay trailer was shown at D23 2026 featuring playable Mickey, Donald, and Goofy.</p>
+            </div>
+            <div class="funnel-step">
+                <span class="step-lbl">WHAT MATTERS</span>
+                <p>Square Enix and Disney publicly committed to the late 2027 release date as a &quot;100% thing&quot; after fan concerns about potential delays. Jared Bush, chief creative officer of Walt Disney Animation Studios, didn&#x27;t rule out the possibility of a Kingdom Hearts feature film.</p>
+            </div>
+            <div class="funnel-step">
+                <span class="step-lbl">WHAT TO WATCH</span>
+                <p>The extended Kingdom Hearts 4 gameplay trailer and the announcement of the Disney+ anime series represent significant franchise expansion beyond the mainline game. Keep an eye on whether the rumored GTA: Hit &amp; Run revival from Matt Groening materializes, as it could compete with GTA 6&#x27;s 2025 launch window.</p>
+            </div>
+            <div class="articles">
+                <div class="articles-label">LATEST</div>
+                
+                <a href="https://www.ign.com/articles/i-want-to-set-the-record-straight-that-is-not-happening-kingdom-hearts-4-devs-say-kh4-100-will-not-be-delayed-past-late-2027-launch-d23-2026" target="_blank" class="article-link">
+                    <span class="art-title"><span class="new-dot"></span>'I Want to Set the Record Straight: That Is Not Happening' — Kingdom Hearts 4 Devs Say KH4 '100%' Will Not Be Delayed Past Late 2027 Launch | D23 2026</span>
+                    <span class="art-meta"><span class="src">IGN</span><span class="art-age">1h ago</span></span>
+                </a>
+                <a href="https://www.ign.com/articles/kingdom-hearts-4-gets-extended-gameplay-trailer-featuring-playable-mickey-donald-and-goofy-d23-2026" target="_blank" class="article-link">
+                    <span class="art-title"><span class="new-dot"></span>Kingdom Hearts 4 Gets Extended Gameplay Trailer Featuring Playable Mickey, Donald, and Goofy | D23 2026</span>
+                    <span class="art-meta"><span class="src">IGN</span><span class="art-age">2h ago</span></span>
+                </a>
+                <a href="https://kotaku.com/saber-ceo-apologizes-to-lead-writer-replaced-with-chatgpt-after-weeklong-crashout-2000724730" target="_blank" class="article-link">
+                    <span class="art-title"><span class="new-dot"></span>Saber CEO Apologizes To Lead Writer Replaced With ChatGPT After Weeklong Crashout</span>
+                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">2h ago</span></span>
+                </a>
+                <a href="https://www.ign.com/articles/d23-deep-dive-into-kingdom-hearts-panel-everything-announced-updating-live" target="_blank" class="article-link">
+                    <span class="art-title"><span class="new-dot"></span>D23 Deep Dive Into Kingdom Hearts Panel: Everything Announced</span>
+                    <span class="art-meta"><span class="src">IGN</span><span class="art-age">4h ago</span></span>
+                </a>
+                <a href="https://www.ign.com/articles/best-deals-for-august-15-2026" target="_blank" class="article-link">
+                    <span class="art-title"><span class="new-dot"></span>The Best Deals Today: Project Hail Mary 4K Blu-ray, Resident Evil Requiem, AirPods Pro 3, and More</span>
+                    <span class="art-meta"><span class="src">IGN</span><span class="art-age">6h ago</span></span>
+                </a>
+                <a href="https://kotaku.com/teenage-sex-and-death-at-camp-miasma-wants-to-have-its-cake-and-splatter-it-too-2000724725" target="_blank" class="article-link">
+                    <span class="art-title"><span class="new-dot"></span>Teenage Sex and Death at Camp Miasma Wants To Have Its Cake And Splatter It Too</span>
+                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">7h ago</span></span>
+                </a>
+                <a href="https://kotaku.com/rare-two-player-version-of-first-arcade-game-up-for-auction-from-shiny-entertainment-founder-2000724719" target="_blank" class="article-link">
+                    <span class="art-title">Rare Two-Player Version Of First Arcade Game Up For Auction From Shiny Entertainment Founder</span>
+                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">8h ago</span></span>
+                </a>
+                <a href="https://kotaku.com/former-square-enix-exec-believes-disc-free-playstation-will-drive-game-prices-down-2000724716" target="_blank" class="article-link">
+                    <span class="art-title">Here’s The Argument For Why A Disc-Free PlayStation Could Actually Drive Game Prices Down</span>
+                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">9h ago</span></span>
+                </a>
+                <a href="https://www.ign.com/articles/100-marvels-spider-man-games-with-one-month-of-free-ign-guides-checklists" target="_blank" class="article-link">
+                    <span class="art-title">100% Marvel's Spider-Man Games with One Month of Free IGN Guides Checklists</span>
+                    <span class="art-meta"><span class="src">IGN</span><span class="art-age">10h ago</span></span>
+                </a>
+                <a href="https://kotaku.com/tetsuya-nomura-says-let-your-imaginations-run-wild-on-kingdom-hearts-animated-series-so-i-will-2000724711" target="_blank" class="article-link">
+                    <span class="art-title">Tetsuya Nomura Says ‘Let Your Imaginations Run Wild’ On Kingdom Hearts Animated Series, So I Will</span>
+                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">10h ago</span></span>
+                </a>
+                <a href="https://kotaku.com/simpsons-creator-says-gta-like-hit-run-game-is-coming-back-maybe-2000724708" target="_blank" class="article-link">
+                    <span class="art-title">Simpsons Creator Says GTA-Like Hit & Run Game Is Coming Back, Maybe</span>
+                    <span class="art-meta"><span class="src">Kotaku</span><span class="art-age">12h ago</span></span>
+                </a>
+                <a href="https://www.ign.com/articles/i-hope-gta-6-borrows-a-lot-from-gta-4" target="_blank" class="article-link">
+                    <span class="art-title">I Hope GTA 6 Borrows a Lot From GTA 4</span>
+                    <span class="art-meta"><span class="src">IGN</span><span class="art-age">14h ago</span></span>
+                </a>
+            </div>
+            
+        </div>
 </div>
-<footer>Generated by ai_dashboard.py · Summarized by Claude Haiku · Sources: RSS · Freddie Mac · US Treasury · Open-Meteo</footer>
+<footer>Generated by ai_dashboard.py · Summarized by Claude Haiku · Sources: RSS · Open-Meteo</footer>
 </body>
 </html>
