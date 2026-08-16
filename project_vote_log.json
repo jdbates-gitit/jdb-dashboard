@@ -18,5 +18,18 @@
       "ADVENTURE"
     ],
     "flagged": false
+  },
+  {
+    "date": "2026-08-16",
+    "title": "Speed-Optimized Workflow Analyzer",
+    "idea": "Build a tool that measures and benchmarks your actual AI tool response times across different providers/models, then recommends faster alternatives for your repeated tasks.",
+    "why_now": "OpenAI's emphasis on inference speed as a competitive frontier means the speed gap between models is widening fast—what was acceptable last month might be slow today, and you need visibility into where you're actually losing time.",
+    "smallest": "Create a Make.com workflow that logs response times for your 3 most-used AI tasks (e.g., Claude API call + GPT call + local model), stores them in a spreadsheet with timestamps, and flags when one provider consistently outperforms another by >20%.",
+    "tags": [
+      "MONEY",
+      "PORTFOLIO",
+      "FUN"
+    ],
+    "flagged": false
   }
 ]
