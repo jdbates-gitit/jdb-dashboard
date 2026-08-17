@@ -59,5 +59,19 @@
       "ADVENTURE"
     ],
     "flagged": false
+  },
+  {
+    "date": "2026-08-17",
+    "title": "Policy Idea Validator",
+    "idea": "Build a tool that takes a policy proposal and stress-tests it against economic opportunity and societal resilience frameworks, surfacing blind spots and unintended consequences before public launch.",
+    "tool": "Claude API + Anthropic's Batch API + a lightweight Streamlit interface",
+    "why_now": "OpenAI just funded 14 independent policy projects; demonstrating rigorous vetting methodology early could attract attention from funders and position Jason as someone who understands how to validate ideas at scale.",
+    "smallest": "Accept a raw policy text, run it through structured Claude prompts that interrogate job impact, equity distribution, and failure modes, return a scored assessment with specific concerns flagged.",
+    "tags": [
+      "PORTFOLIO",
+      "HELPS",
+      "PROTECTS"
+    ],
+    "flagged": false
   }
 ]
