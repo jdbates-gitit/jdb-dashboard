@@ -45,5 +45,19 @@
       "HELPS"
     ],
     "flagged": false
+  },
+  {
+    "date": "2026-08-17",
+    "title": "Policy Pitch Validator",
+    "idea": "Build a tool that takes policy ideas and stress-tests them against real-world implementation scenarios using structured debate between multiple AI perspectives.",
+    "tool": "Claude API + Gamma (for live presentation generation) + a simple backend like Flask or FastAPI",
+    "why_now": "OpenAI's new funding for independent AI policy projects means there's genuine demand for tools that help people stress-test and refine policy concepts before submission or public presentation.",
+    "smallest": "Create a single-prompt interface where someone pastes a policy idea, and Claude generates a 3-perspective analysis (implementation officer, skeptic, and economist) that Gamma automatically turns into a shareable slide deck.",
+    "tags": [
+      "PORTFOLIO",
+      "HELPS",
+      "ADVENTURE"
+    ],
+    "flagged": false
   }
 ]
