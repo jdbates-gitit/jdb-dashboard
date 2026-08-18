@@ -87,5 +87,19 @@
       "ADVENTURE"
     ],
     "flagged": false
+  },
+  {
+    "date": "2026-08-18",
+    "title": "Teen AI Voice Tutor",
+    "idea": "Build an interactive voice-based learning tool that teaches teens AI literacy through guided conversation, with real-time feedback on their understanding and thinking patterns.",
+    "tool": "Vercel + FastAPI + Whisper + Claude API + Supabase for conversation history",
+    "why_now": "ChatGPT for Teens and the CodeAI partnership both signal real demand for AI education tools built specifically for younger users with appropriate guardrails and pedagogical structure.",
+    "smallest": "A single Vercel endpoint that accepts teen voice input via Whisper, converts it to text, routes through Claude with a \"teen AI educator\" system prompt designed to ask clarifying questions rather than just answer, and returns spoken feedback via a text-to-speech API—tracking the conversation in Supabase to show learning progress over time.",
+    "tags": [
+      "HELPS",
+      "PORTFOLIO",
+      "PROTECTS"
+    ],
+    "flagged": false
   }
 ]
