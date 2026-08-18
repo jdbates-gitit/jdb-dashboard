@@ -73,5 +73,19 @@
       "PROTECTS"
     ],
     "flagged": false
+  },
+  {
+    "date": "2026-08-18",
+    "title": "Teen AI Voice Coach",
+    "idea": "Build a tool that lets teens record themselves speaking about a topic, then get AI feedback on clarity, critical thinking quality, and responsible AI framing—helping them develop the \"thinking critically about AI\" skills OpenAI and CodeAI are pushing.",
+    "tool": "Anthropic's Batch API + a lightweight FastAPI backend + basic audio transcription via Whisper, deployed on Vercel.",
+    "why_now": "ChatGPT for Teens just launched with a focus on learning and critical thinking; this tool directly teaches the meta-skill of *evaluating your own AI thinking* rather than just using AI passively.",
+    "smallest": "Today, build a single-page interface where a teen can paste or upload a short audio clip, get it transcribed, and receive Claude's structured feedback on three dimensions: (1) clarity of reasoning, (2) spots where they might need to fact-check or verify, (3) quality of the argument itself—all framed as coaching, not grading.",
+    "tags": [
+      "HELPS",
+      "PORTFOLIO",
+      "ADVENTURE"
+    ],
+    "flagged": false
   }
 ]
