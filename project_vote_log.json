@@ -101,5 +101,19 @@
       "PROTECTS"
     ],
     "flagged": false
+  },
+  {
+    "date": "2026-08-19",
+    "title": "Teen Voice Confidence Coach",
+    "idea": "Build a real-time voice analysis tool specifically for teenagers that detects speech patterns (filler words, pace, confidence markers) and gives immediate, encouraging feedback with built-in parent transparency dashboards.",
+    "tool": "Vercel + FastAPI + Whisper + Claude API + Supabase + simple React frontend for teen UI and separate parent dashboard.",
+    "why_now": "ChatGPT for Teens just launched with parent controls and built-in protections as a core feature—this idea sits directly in that sweet spot of teen-focused AI tools with explicit parental oversight baked in from day one, plus the voice analysis angle ties to the \"pacing\" and critical thinking themes OpenAI is emphasizing for this age group.",
+    "smallest": "Record a 30-second voice sample, transcribe with Whisper, send to Claude to identify 3 specific speech patterns (um/uh frequency, average pause length, pace consistency), return a single confidence score and one concrete micro-tip, with a parent view that logs the session without exposing full transcripts.",
+    "tags": [
+      "HELPS",
+      "PORTFOLIO",
+      "PROTECTS"
+    ],
+    "flagged": false
   }
 ]
