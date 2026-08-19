@@ -115,5 +115,19 @@
       "PROTECTS"
     ],
     "flagged": false
+  },
+  {
+    "date": "2026-08-19",
+    "title": "Privacy-First Agent Memory Compact",
+    "idea": "Build a lightweight memory management system for AI agents that strips unnecessary context to dramatically reduce token costs while maintaining conversation quality.",
+    "tool": "Replit + GPT-5.6 Luna + FastAPI + Supabase",
+    "why_now": "The \"How Much Memory Does Your Agent Actually Need?\" headline combined with Replit's new free tier powered by Luna makes it perfect timing to test whether smarter memory pruning beats dumb context windows.",
+    "smallest": "Create a simple chat interface where each message gets scored for relevance, less-relevant older turns get compressed into summaries, and you measure token savings vs. conversation coherence over 20+ turns.",
+    "tags": [
+      "MONEY",
+      "PORTFOLIO",
+      "ADVENTURE"
+    ],
+    "flagged": false
   }
 ]
