@@ -101,5 +101,33 @@
       "PROTECTS"
     ],
     "flagged": false
+  },
+  {
+    "date": "2026-08-19",
+    "title": "Teen Voice Confidence Coach",
+    "idea": "Build a real-time voice analysis tool specifically for teenagers that detects speech patterns (filler words, pace, confidence markers) and gives immediate, encouraging feedback with built-in parent transparency dashboards.",
+    "tool": "Vercel + FastAPI + Whisper + Claude API + Supabase + simple React frontend for teen UI and separate parent dashboard.",
+    "why_now": "ChatGPT for Teens just launched with parent controls and built-in protections as a core feature—this idea sits directly in that sweet spot of teen-focused AI tools with explicit parental oversight baked in from day one, plus the voice analysis angle ties to the \"pacing\" and critical thinking themes OpenAI is emphasizing for this age group.",
+    "smallest": "Record a 30-second voice sample, transcribe with Whisper, send to Claude to identify 3 specific speech patterns (um/uh frequency, average pause length, pace consistency), return a single confidence score and one concrete micro-tip, with a parent view that logs the session without exposing full transcripts.",
+    "tags": [
+      "HELPS",
+      "PORTFOLIO",
+      "PROTECTS"
+    ],
+    "flagged": false
+  },
+  {
+    "date": "2026-08-19",
+    "title": "Privacy-First Agent Memory Compact",
+    "idea": "Build a lightweight memory management system for AI agents that strips unnecessary context to dramatically reduce token costs while maintaining conversation quality.",
+    "tool": "Replit + GPT-5.6 Luna + FastAPI + Supabase",
+    "why_now": "The \"How Much Memory Does Your Agent Actually Need?\" headline combined with Replit's new free tier powered by Luna makes it perfect timing to test whether smarter memory pruning beats dumb context windows.",
+    "smallest": "Create a simple chat interface where each message gets scored for relevance, less-relevant older turns get compressed into summaries, and you measure token savings vs. conversation coherence over 20+ turns.",
+    "tags": [
+      "MONEY",
+      "PORTFOLIO",
+      "ADVENTURE"
+    ],
+    "flagged": false
   }
 ]
