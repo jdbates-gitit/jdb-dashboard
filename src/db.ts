@@ -9,6 +9,16 @@ export type IdeaStatus =
 
 export type IdeaDestination = "undecided" | "architecture_chat" | "codex" | "hold";
 
+export interface BriefingSection {
+  key: string;
+  title: string;
+  headline: string;
+  body: string;
+  why_it_matters: string;
+  takeaway: string;
+  sources: Array<{ title: string; url: string }>;
+}
+
 export interface StoredBriefingRow {
   id: string;
   briefing_date: string;
@@ -38,19 +48,23 @@ export interface StoredIdeaRow {
   updated_at: string;
 }
 
+export interface StoredPublicBriefingRow {
+  id: string;
+  source_briefing_id: string;
+  briefing_date: string;
+  title: string;
+  subtitle: string;
+  one_line_signal: string;
+  content_json: string;
+  source_generated_at: string;
+  published_at: string;
+}
+
 export interface GeneratedBriefing {
   title: string;
   subtitle: string;
   one_line_signal: string;
-  sections: Array<{
-    key: string;
-    title: string;
-    headline: string;
-    body: string;
-    why_it_matters: string;
-    takeaway: string;
-    sources: Array<{ title: string; url: string }>;
-  }>;
+  sections: BriefingSection[];
   ideas: Array<{
     kind: "new_project" | "project_edit";
     related_project: string;
@@ -61,6 +75,12 @@ export interface GeneratedBriefing {
     tags: string[];
     destination: IdeaDestination;
   }>;
+}
+
+const PRIVATE_SECTION_KEYS = new Set(["project_vote"]);
+
+export function selectPublicSections(sections: BriefingSection[]): BriefingSection[] {
+  return sections.filter((section) => !PRIVATE_SECTION_KEYS.has(section.key));
 }
 
 function parseBriefing(row: StoredBriefingRow | null): Record<string, unknown> | null {
@@ -97,6 +117,20 @@ function parseIdea(row: StoredIdeaRow): Record<string, unknown> {
   };
 }
 
+function parsePublicBriefing(row: StoredPublicBriefingRow | null): Record<string, unknown> | null {
+  if (!row) return null;
+  const content = JSON.parse(row.content_json) as { sections?: BriefingSection[] };
+  return {
+    id: row.id,
+    date: row.briefing_date,
+    title: row.title,
+    subtitle: row.subtitle,
+    oneLineSignal: row.one_line_signal,
+    sections: selectPublicSections(content.sections ?? []),
+    publishedAt: row.published_at,
+  };
+}
+
 export async function getLatestBriefing(db: D1Database): Promise<Record<string, unknown> | null> {
   const row = await db
     .prepare("SELECT * FROM briefings ORDER BY briefing_date DESC, generated_at DESC LIMIT 1")
@@ -121,6 +155,87 @@ export async function listBriefings(db: D1Database, limit: number): Promise<Reco
     .bind(limit)
     .all<StoredBriefingRow>();
   return result.results.map((row) => parseBriefing(row)!).filter(Boolean);
+}
+
+export async function getLatestPublicBriefing(db: D1Database): Promise<Record<string, unknown> | null> {
+  const row = await db
+    .prepare(
+      "SELECT * FROM public_briefings ORDER BY briefing_date DESC, published_at DESC LIMIT 1",
+    )
+    .first<StoredPublicBriefingRow>();
+  return parsePublicBriefing(row);
+}
+
+export async function getPublicationStatus(db: D1Database): Promise<Record<string, unknown>> {
+  const [source, publication] = await Promise.all([
+    db
+      .prepare(
+        "SELECT id, briefing_date, generated_at FROM briefings ORDER BY briefing_date DESC, generated_at DESC LIMIT 1",
+      )
+      .first<{ id: string; briefing_date: string; generated_at: string }>(),
+    db
+      .prepare(
+        "SELECT briefing_date, source_generated_at, published_at FROM public_briefings ORDER BY briefing_date DESC, published_at DESC LIMIT 1",
+      )
+      .first<{ briefing_date: string; source_generated_at: string; published_at: string }>(),
+  ]);
+
+  const isCurrent = Boolean(
+    source &&
+      publication &&
+      source.briefing_date === publication.briefing_date &&
+      source.generated_at === publication.source_generated_at,
+  );
+
+  return {
+    hasBriefing: Boolean(source),
+    isPublished: isCurrent,
+    briefingDate: source?.briefing_date ?? null,
+    publishedAt: isCurrent ? publication?.published_at ?? null : null,
+  };
+}
+
+export async function publishLatestBriefing(db: D1Database): Promise<Record<string, unknown> | null> {
+  const source = await db
+    .prepare("SELECT * FROM briefings ORDER BY briefing_date DESC, generated_at DESC LIMIT 1")
+    .first<StoredBriefingRow>();
+  if (!source) return null;
+
+  const content = JSON.parse(source.content_json) as { sections?: BriefingSection[] };
+  const publishedAt = new Date().toISOString();
+  await db
+    .prepare(
+      `INSERT INTO public_briefings
+        (id, source_briefing_id, briefing_date, title, subtitle, one_line_signal,
+         content_json, source_generated_at, published_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(briefing_date) DO UPDATE SET
+        source_briefing_id = excluded.source_briefing_id,
+        title = excluded.title,
+        subtitle = excluded.subtitle,
+        one_line_signal = excluded.one_line_signal,
+        content_json = excluded.content_json,
+        source_generated_at = excluded.source_generated_at,
+        published_at = excluded.published_at`,
+    )
+    .bind(
+      crypto.randomUUID(),
+      source.id,
+      source.briefing_date,
+      source.title,
+      source.subtitle,
+      source.one_line_signal,
+      JSON.stringify({ sections: selectPublicSections(content.sections ?? []) }),
+      source.generated_at,
+      publishedAt,
+    )
+    .run();
+
+  const publication = await db
+    .prepare("SELECT * FROM public_briefings WHERE briefing_date = ? LIMIT 1")
+    .bind(source.briefing_date)
+    .first<StoredPublicBriefingRow>();
+  return parsePublicBriefing(publication);
 }
 
 export async function listIdeas(

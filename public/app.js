@@ -15,6 +15,7 @@ const state = {
   briefing: null,
   briefings: [],
   ideas: [],
+  publication: null,
   canEdit: false,
   view: "today",
   ledgerFilter: "active",
@@ -96,11 +97,10 @@ function renderBriefing(briefing) {
     (a, b) => SECTION_ORDER.indexOf(a.key) - SECTION_ORDER.indexOf(b.key),
   );
   content.innerHTML = sections.map((section, index) => {
-    const feature = ["ai_expansion", "expansion_signal"].includes(section.key) ? " feature" : "";
     const sources = (section.sources || []).filter((source) => safeUrl(source.url) !== "#").map((source) =>
       `<a class="source-link" href="${escapeHtml(safeUrl(source.url))}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.title)}</a>`,
     ).join("");
-    return `<article class="briefing-card${feature}">
+    return `<article class="briefing-card">
       <div class="card-index">${String(index + 1).padStart(2, "0")} · ${escapeHtml(section.title)}</div>
       <h2>${escapeHtml(section.headline)}</h2>
       <h3>${escapeHtml(section.why_it_matters)}</h3>
@@ -176,6 +176,19 @@ function renderArchive() {
     </button>`).join("") : emptyState("No past editions yet", "Each daily briefing will be preserved here automatically.");
 }
 
+function renderPublication() {
+  const button = $("#publish-button");
+  const link = $("#public-page-link");
+  if (!state.canEdit || !state.publication) return;
+
+  const isPublished = Boolean(state.publication.isPublished);
+  button.disabled = isPublished || !state.publication.hasBriefing;
+  button.textContent = isPublished ? "Published ✓" : "Publish public page";
+  button.classList.toggle("button-published", isPublished);
+  link.href = state.publication.publicUrl || "https://briefing.jdb-builds.com/";
+  link.hidden = !isPublished;
+}
+
 function setView(view) {
   state.view = view;
   $$(".view").forEach((element) => element.classList.toggle("active", element.id === `${view}-view`));
@@ -248,12 +261,14 @@ async function generateBriefing() {
   try {
     const data = await api("/api/generate", { method: "POST", body: JSON.stringify({ force: true }) });
     state.briefing = data.briefing;
-    const all = await Promise.all([api("/api/briefings"), api("/api/ideas")]);
+    const all = await Promise.all([api("/api/briefings"), api("/api/ideas"), api("/api/publication")]);
     state.briefings = all[0].briefings || [];
     state.ideas = all[1].ideas || [];
+    state.publication = all[2].publication || null;
     renderBriefing(state.briefing);
     renderIdeas();
     renderArchive();
+    renderPublication();
     setView("today");
     toast("Today’s briefing is ready.");
   } catch (error) {
@@ -264,24 +279,43 @@ async function generateBriefing() {
   }
 }
 
+async function publishBriefing() {
+  const button = $("#publish-button");
+  button.disabled = true;
+  button.textContent = "Publishing…";
+  try {
+    const data = await api("/api/publish", { method: "POST" });
+    state.publication = data.publication;
+    renderPublication();
+    toast("Public edition published. Project Vote and project data stayed private.");
+  } catch (error) {
+    toast(error.message);
+    button.disabled = false;
+    button.textContent = "Publish public page";
+  }
+}
+
 async function init() {
   $("#current-date").textContent = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "short", day: "numeric" }).format(new Date());
   try {
-    const [sessionData, briefingData, briefingsData, ideasData] = await Promise.all([
+    const [sessionData, briefingData, briefingsData, ideasData, publicationData] = await Promise.all([
       api("/api/session"),
       api("/api/briefings/latest"),
       api("/api/briefings"),
       api("/api/ideas"),
+      api("/api/publication"),
     ]);
     state.canEdit = Boolean(sessionData.canEdit);
     state.briefing = briefingData.briefing;
     state.briefings = briefingsData.briefings || [];
     state.ideas = ideasData.ideas || [];
+    state.publication = publicationData.publication || null;
     $$(".editor-only").forEach((element) => { element.hidden = !state.canEdit; });
     $("#access-label").textContent = state.canEdit ? "Editor controls active" : "Viewing dashboard";
     renderBriefing(state.briefing);
     renderIdeas();
     renderArchive();
+    renderPublication();
   } catch (error) {
     $("#briefing-hero").classList.remove("skeleton-block");
     $("#briefing-hero").innerHTML = `<p class="eyebrow">CONNECTION ERROR</p><h1 id="briefing-title">The signal went quiet.</h1><p class="briefing-subtitle">${escapeHtml(error.message)}</p>`;
@@ -311,6 +345,7 @@ document.addEventListener("click", (event) => {
 });
 
 $("#generate-button").addEventListener("click", generateBriefing);
+$("#publish-button").addEventListener("click", publishBriefing);
 $("#idea-dialog .dialog-close").addEventListener("click", () => $("#idea-dialog").close());
 $("#idea-dialog").addEventListener("click", (event) => {
   if (event.target === $("#idea-dialog")) $("#idea-dialog").close();

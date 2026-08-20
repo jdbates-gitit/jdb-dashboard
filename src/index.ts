@@ -3,9 +3,12 @@ import {
   finishGenerationRun,
   getBriefingByDate,
   getLatestBriefing,
+  getLatestPublicBriefing,
+  getPublicationStatus,
   getRecentContext,
   listBriefings,
   listIdeas,
+  publishLatestBriefing,
   saveGeneratedBriefing,
   startGenerationRun,
   updateIdea,
@@ -38,6 +41,24 @@ function json(data: unknown, init: ResponseInit = {}): Response {
   return Response.json(data, { ...init, headers });
 }
 
+function publicJson(data: unknown, init: ResponseInit = {}): Response {
+  const headers = new Headers(init.headers);
+  headers.set("Content-Type", "application/json; charset=utf-8");
+  headers.set("Cache-Control", "public, max-age=60");
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("Access-Control-Allow-Origin", `https://${PUBLIC_HOSTNAME}`);
+  return Response.json(data, { ...init, headers });
+}
+
+const PUBLIC_HOSTNAME = "briefing.jdb-builds.com";
+const PRIVATE_HOSTNAME = "dashboard.jdb-builds.com";
+const PUBLIC_ASSET_PATHS = new Map([
+  ["/", "/edition.html"],
+  ["/edition.css", "/edition.css"],
+  ["/edition.js", "/edition.js"],
+  ["/favicon.svg", "/favicon.svg"],
+]);
+
 function localDate(timeZone: string, date = new Date()): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,
@@ -58,6 +79,23 @@ function localHour(timeZone: string, date = new Date()): number {
 function isLocalRequest(request: Request): boolean {
   const host = new URL(request.url).hostname;
   return host === "127.0.0.1" || host === "localhost";
+}
+
+export function classifyHostname(
+  hostname: string,
+  privateHostname = PRIVATE_HOSTNAME,
+  publicHostname = PUBLIC_HOSTNAME,
+): "private" | "public" | "unknown" {
+  const normalized = hostname.trim().toLowerCase();
+  if (normalized === publicHostname.toLowerCase()) return "public";
+  if (
+    normalized === privateHostname.toLowerCase() ||
+    normalized === "127.0.0.1" ||
+    normalized === "localhost"
+  ) {
+    return "private";
+  }
+  return "unknown";
 }
 
 function editorIdentity(request: Request, env: Env): { canEdit: boolean; email: string } {
@@ -97,6 +135,10 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
     return json({ canEdit: identity.canEdit, email: identity.canEdit ? identity.email : "" });
   }
 
+  if (!identity.canEdit) {
+    return json({ error: "Editor access required." }, { status: 403 });
+  }
+
   if (request.method === "GET" && url.pathname === "/api/briefings/latest") {
     return json({ briefing: await getLatestBriefing(env.DB) });
   }
@@ -112,15 +154,34 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
     return json({ ideas: await listIdeas(env.DB, status) });
   }
 
+  if (request.method === "GET" && url.pathname === "/api/publication") {
+    return json({
+      publication: {
+        ...(await getPublicationStatus(env.DB)),
+        publicUrl: `https://${PUBLIC_HOSTNAME}/`,
+      },
+    });
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/publish") {
+    const briefing = await publishLatestBriefing(env.DB);
+    if (!briefing) return json({ error: "Generate a briefing before publishing." }, { status: 409 });
+    return json({
+      briefing,
+      publication: {
+        ...(await getPublicationStatus(env.DB)),
+        publicUrl: `https://${PUBLIC_HOSTNAME}/`,
+      },
+    });
+  }
+
   if (request.method === "POST" && url.pathname === "/api/generate") {
-    if (!identity.canEdit) return json({ error: "Editor access required." }, { status: 403 });
     const body = (await request.json().catch(() => ({}))) as { force?: boolean };
     return json(await runGeneration(env, identity.email || "local-editor", Boolean(body.force)));
   }
 
   const ideaMatch = url.pathname.match(/^\/api\/ideas\/([0-9a-f-]+)$/i);
   if (request.method === "PATCH" && ideaMatch) {
-    if (!identity.canEdit) return json({ error: "Editor access required." }, { status: 403 });
     const body = (await request.json()) as {
       status?: IdeaStatus;
       destination?: IdeaDestination;
@@ -139,10 +200,51 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
   return json({ error: "Not found." }, { status: 404 });
 }
 
-export default {
-  async fetch(request, env): Promise<Response> {
+function securePublicResponse(response: Response, pathname: string): Response {
+  const headers = new Headers(response.headers);
+  headers.set("Cache-Control", pathname === "/" ? "public, max-age=60" : "public, max-age=300");
+  headers.set(
+    "Content-Security-Policy",
+    "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+  );
+  headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("X-Frame-Options", "DENY");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+async function handlePublicRequest(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  if (request.method === "GET" && url.pathname === "/api/public/briefing") {
+    return publicJson({ briefing: await getLatestPublicBriefing(env.DB) });
+  }
+
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return publicJson({ error: "Method not allowed." }, { status: 405, headers: { Allow: "GET, HEAD" } });
+  }
+
+  const assetPath = PUBLIC_ASSET_PATHS.get(url.pathname);
+  if (!assetPath) return publicJson({ error: "Not found." }, { status: 404 });
+
+  const assetUrl = new URL(request.url);
+  assetUrl.pathname = assetPath;
+  assetUrl.search = "";
+  const assetRequest = new Request(assetUrl, request);
+  return securePublicResponse(await env.ASSETS.fetch(assetRequest), url.pathname);
+}
+
+const worker = {
+  async fetch(request: Request, env: Env): Promise<Response> {
     try {
       const url = new URL(request.url);
+      const surface = classifyHostname(url.hostname);
+      if (surface === "public") return await handlePublicRequest(request, env);
+      if (surface === "unknown") return json({ error: "Not found." }, { status: 404 });
       if (url.pathname.startsWith("/api/")) return await handleApi(request, env);
       return await env.ASSETS.fetch(request);
     } catch (error) {
@@ -152,7 +254,7 @@ export default {
     }
   },
 
-  async scheduled(controller, env): Promise<void> {
+  async scheduled(controller: ScheduledController, env: Env): Promise<void> {
     if (localHour(env.TIME_ZONE, new Date(controller.scheduledTime)) !== 8) {
       console.log(JSON.stringify({ event: "briefing_schedule_skipped", reason: "dst_guard" }));
       return;
@@ -160,5 +262,7 @@ export default {
     await runGeneration(env, "cloudflare-cron", false);
   },
 } satisfies ExportedHandler<Env>;
+
+export default worker;
 
 export { localDate, localHour };

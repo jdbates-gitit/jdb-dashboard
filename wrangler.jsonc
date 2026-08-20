@@ -2,15 +2,26 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "jdb-dashboard",
   "main": "src/index.ts",
+  "workers_dev": false,
   "compatibility_date": "2026-08-19",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*"],
+    "run_worker_first": true,
     "html_handling": "none",
     "not_found_handling": "single-page-application"
   },
+  "routes": [
+    {
+      "pattern": "dashboard.jdb-builds.com/*",
+      "zone_name": "jdb-builds.com"
+    },
+    {
+      "pattern": "briefing.jdb-builds.com",
+      "custom_domain": true
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",

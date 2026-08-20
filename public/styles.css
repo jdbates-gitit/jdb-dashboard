@@ -61,8 +61,10 @@ a { color: inherit; }
 .brand-mark i:nth-child(3) { height: 22px; }
 .brand b { display: block; font-family: var(--mono); font-size: 13px; letter-spacing: .18em; }
 .brand small { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; letter-spacing: .15em; }
-.masthead-right { display: flex; align-items: center; gap: 24px; }
+.masthead-right { display: flex; align-items: center; gap: 12px; }
 .current-date { margin: 0; color: var(--muted); font-family: var(--mono); font-size: 11px; text-transform: uppercase; }
+.public-page-link { color: var(--muted); font: 9px var(--mono); letter-spacing: .08em; text-decoration: none; text-transform: uppercase; }
+.public-page-link:hover { color: var(--acid); }
 .button {
   border: 1px solid var(--line);
   border-radius: 2px;
@@ -77,6 +79,7 @@ a { color: inherit; }
 }
 .button:hover { border-color: var(--muted); transform: translateY(-1px); }
 .button-accent { border-color: var(--acid); background: var(--acid); color: #151810; font-weight: 500; }
+.button-published { border-color: #59634d; color: var(--acid); cursor: default; }
 .button:disabled { cursor: wait; opacity: .5; transform: none; }
 
 .app-shell { display: grid; grid-template-columns: 224px minmax(0, 1fr); min-height: calc(100vh - 84px); }
@@ -134,9 +137,8 @@ main { min-width: 0; padding: 58px clamp(28px, 5vw, 80px) 100px; }
 .signal-line p { margin: 0; color: var(--ink); font: 13px/1.6 var(--mono); }
 
 .briefing-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.briefing-card { min-height: 360px; padding: 44px 44px 40px 0; border-bottom: 1px solid var(--line); }
+.briefing-card { min-height: 340px; padding: 42px 44px 40px 0; border-bottom: 1px solid var(--line); }
 .briefing-card:nth-child(even) { padding-left: 44px; padding-right: 0; border-left: 1px solid var(--line); }
-.briefing-card.feature { grid-column: 1 / -1; min-height: 300px; padding-right: 24%; border-left: 0; }
 .card-index { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; color: var(--faint); font: 9px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
 .card-index::before { content: ""; width: 22px; height: 1px; background: currentColor; }
 .briefing-card h2 { margin: 0 0 16px; font: 500 clamp(28px, 3vw, 42px)/1.05 var(--serif); letter-spacing: -.025em; }
@@ -225,7 +227,7 @@ main { min-width: 0; padding: 58px clamp(28px, 5vw, 80px) 100px; }
 .skeleton-block { min-height: 330px; background: linear-gradient(90deg, var(--panel), var(--panel-2), var(--panel)); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 
-@media (max-width: 980px) {
+@media (max-width: 1120px) {
   .app-shell { grid-template-columns: minmax(0, 1fr); max-width: 100vw; }
   .side-rail { position: sticky; top: 70px; z-index: 7; height: auto; padding: 0 20px; overflow-x: auto; background: rgba(11,13,12,.95); border-right: 0; border-bottom: 1px solid var(--line); }
   .side-rail { width: 100vw; min-width: 0; }
@@ -239,8 +241,8 @@ main { min-width: 0; padding: 58px clamp(28px, 5vw, 80px) 100px; }
   .ledger-row { grid-template-columns: 80px 1fr 120px 30px; }
   .ledger-summary { display: none; }
 }
-@media (max-width: 700px) {
-  .brand small, .current-date, .nav-item span { display: none; }
+@media (max-width: 760px) {
+  .brand small, .current-date, .public-page-link, .nav-item span { display: none; }
   .masthead-right { gap: 8px; }
   .masthead .button-accent { flex: 0 0 38px; width: 38px; height: 38px; padding: 0; overflow: hidden; font-size: 0; }
   .masthead .button-accent::before { content: "↻"; font-size: 18px; }
@@ -249,7 +251,7 @@ main { min-width: 0; padding: 58px clamp(28px, 5vw, 80px) 100px; }
   .briefing-hero h1 { font-size: 52px; }
   .signal-line { grid-template-columns: 1fr; gap: 8px; }
   .briefing-grid, .idea-grid, .idea-grid-featured { grid-template-columns: 1fr; }
-  .briefing-card, .briefing-card:nth-child(even), .briefing-card.feature { grid-column: auto; min-height: 0; padding: 34px 0; border-left: 0; }
+  .briefing-card, .briefing-card:nth-child(even) { grid-column: auto; min-height: 0; padding: 34px 0; border-left: 0; }
   .view-heading { display: block; }
   .ledger-counts { margin-top: 24px; }
   .ledger-row { grid-template-columns: 74px 1fr 28px; gap: 12px; }

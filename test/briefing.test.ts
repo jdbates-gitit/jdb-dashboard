@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { extractOutputText, sanitizeGeneratedBriefing } from "../src/briefing";
-import { localDate, localHour } from "../src/index";
+import { selectPublicSections, type BriefingSection } from "../src/db";
+import worker, { classifyHostname, localDate, localHour } from "../src/index";
 
 describe("briefing helpers", () => {
   it("extracts structured output text", () => {
@@ -27,5 +28,65 @@ describe("briefing helpers", () => {
         ideas: [],
       }),
     ).toThrow(/required section structure/);
+  });
+
+  it("keeps the Project Vote out of the public edition", () => {
+    const section = (key: string): BriefingSection => ({
+      key,
+      title: key,
+      headline: "Headline",
+      body: "Body",
+      why_it_matters: "Why it matters",
+      takeaway: "Takeaway",
+      sources: [],
+    });
+
+    expect(selectPublicSections([section("ai_technology"), section("project_vote")])).toEqual([
+      section("ai_technology"),
+    ]);
+  });
+
+  it("separates private, public, and preview hostnames", () => {
+    expect(classifyHostname("dashboard.jdb-builds.com")).toBe("private");
+    expect(classifyHostname("briefing.jdb-builds.com")).toBe("public");
+    expect(classifyHostname("jdb-dashboard.jdbates.workers.dev")).toBe("unknown");
+  });
+
+  it("does not expose private APIs on the public or preview hostnames", async () => {
+    const env = { ADMIN_EMAIL: "jdbates@gmail.com" } as Env;
+    const publicIdeas = await worker.fetch(
+      new Request("https://briefing.jdb-builds.com/api/ideas"),
+      env,
+    );
+    const publicGenerate = await worker.fetch(
+      new Request("https://briefing.jdb-builds.com/api/generate", { method: "POST" }),
+      env,
+    );
+    const previewIdeas = await worker.fetch(
+      new Request("https://jdb-dashboard.jdbates.workers.dev/api/ideas"),
+      env,
+    );
+    const unauthenticatedPrivateIdeas = await worker.fetch(
+      new Request("https://dashboard.jdb-builds.com/api/ideas"),
+      env,
+    );
+
+    expect(publicIdeas.status).toBe(404);
+    expect(publicGenerate.status).toBe(405);
+    expect(previewIdeas.status).toBe(404);
+    expect(unauthenticatedPrivateIdeas.status).toBe(403);
+  });
+
+  it("serves only the dedicated public page on the public hostname", async () => {
+    const env = {
+      ASSETS: {
+        fetch: async (request: Request) => new Response(new URL(request.url).pathname),
+      },
+    } as Env;
+
+    const response = await worker.fetch(new Request("https://briefing.jdb-builds.com/"), env);
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe("/edition.html");
+    expect(response.headers.get("X-Frame-Options")).toBe("DENY");
   });
 });

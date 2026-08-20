@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f2efe6" />
+    <meta name="description" content="A daily researched briefing across technology, business, culture, wellness, and the wider world." />
+    <meta property="og:title" content="The Daily Signal · JDB Builds" />
+    <meta property="og:description" content="One thoughtful scan of what is changing—and why it matters." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://briefing.jdb-builds.com/" />
+    <title>The Daily Signal · JDB Builds</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/edition.css" />
+  </head>
+  <body>
+    <header class="edition-header">
+      <a class="wordmark" href="/" aria-label="The Daily Signal home">
+        <span class="signal-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>THE DAILY SIGNAL</span>
+      </a>
+      <div class="edition-meta">
+        <span>JDB BUILDS</span>
+        <span>PUBLIC EDITION</span>
+      </div>
+    </header>
+
+    <main>
+      <section id="lead" class="lead" aria-labelledby="edition-title">
+        <p class="kicker">LOADING TODAY’S EDITION</p>
+        <h1 id="edition-title">Finding the signal in the noise.</h1>
+        <p class="dek">One thoughtful scan of what is changing—and why it matters.</p>
+      </section>
+
+      <section class="contents-strip" aria-label="About this briefing">
+        <div><span>EDITION</span><strong id="edition-date">Today</strong></div>
+        <div><span>SIGNALS</span><strong id="signal-count">—</strong></div>
+        <div><span>LAST PUBLISHED</span><strong id="published-time">—</strong></div>
+      </section>
+
+      <section id="briefing-content" class="briefing-content" aria-live="polite">
+        <article class="loading-card">
+          <span>CONNECTING</span>
+          <p>The latest briefing is coming into focus.</p>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <div>
+        <strong>THE DAILY SIGNAL</strong>
+        <p>A researched public edition from Jason’s private Signal Room.</p>
+      </div>
+      <div class="footer-note">
+        <p>AI-assisted research, human judgment. Follow the linked sources and make up your own mind.</p>
+        <button id="copy-link" type="button">COPY TODAY’S LINK</button>
+      </div>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="/edition.js"></script>
+  </body>
+</html>
