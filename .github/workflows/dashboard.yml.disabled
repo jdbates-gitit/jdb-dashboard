@@ -1,3 +1,5 @@
+# Archived on 2026-08-19 after the Cloudflare Worker dashboard replaced this system.
+# The .disabled extension prevents GitHub Actions from loading or scheduling it.
 name: Dashboard Auto-Deploy
 
 on:
