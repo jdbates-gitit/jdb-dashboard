@@ -14,8 +14,8 @@
   },
   "routes": [
     {
-      "pattern": "dashboard.jdb-builds.com/*",
-      "zone_name": "jdb-builds.com"
+      "pattern": "dashboard.jdb-builds.com",
+      "custom_domain": true
     },
     {
       "pattern": "briefing.jdb-builds.com",
