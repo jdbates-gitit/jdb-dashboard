@@ -1,0 +1,36 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "jdb-dashboard",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-19",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
+    "html_handling": "none",
+    "not_found_handling": "single-page-application"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "jdb-dashboard",
+      "migrations_dir": "./migrations"
+    }
+  ],
+  "triggers": {
+    "crons": ["0 13 * * *", "0 14 * * *"]
+  },
+  "vars": {
+    "ADMIN_EMAIL": "jdbates@gmail.com",
+    "OPENAI_MODEL": "gpt-5.6-terra",
+    "TIME_ZONE": "America/Chicago"
+  },
+  "secrets": {
+    "required": ["OPENAI_API_KEY"]
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}

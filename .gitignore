@@ -15,3 +15,8 @@ venv/
 # OS cruft
 .DS_Store
 Thumbs.db
+.wrangler/
+node_modules/
+.dev.vars*
+.env*
+worker-configuration.d.ts
