@@ -193,6 +193,8 @@ main { min-width: 0; padding: 58px clamp(28px, 5vw, 80px) 100px; }
 .action:hover { border-color: var(--acid); color: var(--acid); }
 .action.primary { background: var(--acid); border-color: var(--acid); color: #13160f; }
 .action.icon { margin-left: auto; font-size: 13px; }
+.action.danger { margin-left: auto; border-color: rgba(255,147,104,.45); color: var(--orange); }
+.action.danger:hover { border-color: var(--orange); background: rgba(255,147,104,.1); color: #ffb092; }
 .empty-state { grid-column: 1 / -1; padding: 70px 30px; border: 1px dashed var(--line); text-align: center; }
 .empty-state .empty-symbol { display: block; margin-bottom: 18px; color: var(--acid); font: 40px var(--serif); }
 .empty-state h2 { margin: 0 0 10px; font: 28px var(--serif); }

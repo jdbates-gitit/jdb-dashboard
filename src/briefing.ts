@@ -51,8 +51,8 @@ const responseSchema = {
     },
     ideas: {
       type: "array",
-      minItems: 1,
-      maxItems: 3,
+      minItems: 0,
+      maxItems: 2,
       items: {
         type: "object",
         additionalProperties: false,
@@ -99,25 +99,49 @@ Editorial priorities:
 - Keep the voice conversational, grounded, occasionally witty, and free of corporate filler.
 - Avoid repeating yesterday's angle or lightly renaming an old project idea.
 
+Depth and balance:
+- This is not an executive-summary exercise. Spend little space recapping headlines and most of the
+  space explaining mechanisms, concrete examples, what Jason could actually try, and where an idea leads.
+- Prefer one or two developments explored with depth over a list of thin summaries. For AI Expansion,
+  two or three tightly related developments may be developed together when each adds a distinct insight.
+- Let each category remain itself. Do not turn disc golf, gaming, health, world news, finance, or general
+  technology into a mortgage, operations, leadership, productivity, or AI analogy unless the connection
+  is unusually direct, useful, and supported by the facts.
+- Mortgage and mortgage operations belong primarily in Residential Mortgage. Jason's professional
+  background is context, not the lens through which every story or project must pass.
+- A daily theme may connect several sections, but do not force every section to support one thesis.
+- Use a natural mix of reporting, explanation, judgment, curiosity, humor, and practical detail. Avoid
+  making every card sound like the same headline / significance / action template with new nouns.
+- Treat recent project titles only as a deduplication list, never as evidence that more ideas from the
+  same category are preferred.
+
 Write exactly these sections, in this order:
 1. AI Expansion — what is newly possible, what it unlocks, how Jason could try it, where it leads.
 2. AI & Technology — the most important developments, significance, and practical takeaway.
-3. Expansion Signal — connect at least two developments and identify the opportunity underneath them.
-4. Project Vote / Build From This — one concrete build idea, why now, and smallest useful version.
+3. Expansion Signal — connect at least two developments and identify the non-obvious pattern or opportunity underneath them.
+4. Project Vote / Build From This — present one concrete build or experiment only if it clears a high bar.
+   It is acceptable to say there is no project worth adding today instead of manufacturing one.
 5. Disc Golf & Outdoor Life — event/news, why it matters, and one useful skill or experience takeaway.
 6. Gaming & Entertainment — releases/updates, what matters, and what is worth watching.
 7. Health & Wellness — important update, why it matters, and a practical action. Avoid diagnosis.
 8. Business & Financial Freedom — market/economic or entrepreneurial signal, impact, practical takeaway.
-9. Residential Mortgage — rates/industry data, operational impact, and an action. Assume mortgage fluency.
-10. World Watch — major global development and its U.S., economic, or practical connection.
+   Do not default to mortgage, corporate operations, or another dashboard idea.
+9. Residential Mortgage — concise rates/industry data, a genuinely material operational implication, and an action.
+   Assume mortgage fluency and do not repeat generic pipeline advice when little changed.
+10. World Watch — major global development and its U.S., economic, or practical connection. Follow the
+   strongest real consequence; do not automatically route the story through Treasury yields or mortgage rates.
 
 Project ideas:
-- Return 1-3 ideas only when they are genuinely worth keeping.
+- Return 0-2 ideas. Zero is the correct answer when nothing is genuinely worth keeping.
 - Distinguish a new project from an enhancement to something Jason already has.
 - Use destination "architecture_chat" when design or scope decisions remain, "codex" when it is ready
   to implement, and "hold" when interesting but not timely.
 - Watchtower-related ideas should usually be project edits unless they are truly separate products.
 - Look for practical, ambitious, and occasionally surprising intersections without manufacturing novelty.
+- Draw across Jason's full life and curiosity: technology, security, creativity, learning, personal tools,
+  finance, outdoor life, entertainment, philosophy, and playful experiments—not primarily mortgage operations.
+- Do not propose a generic tracker, dashboard, monitor, intake workflow, or operational tool unless the
+  specific problem and differentiating insight make it unusually compelling.
 `;
 
 interface OpenAIResponse {

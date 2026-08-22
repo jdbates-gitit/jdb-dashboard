@@ -1,5 +1,6 @@
 import { generateBriefing } from "./briefing";
 import {
+  deleteIdea,
   finishGenerationRun,
   getBriefingByDate,
   getLatestBriefing,
@@ -181,6 +182,11 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
   }
 
   const ideaMatch = url.pathname.match(/^\/api\/ideas\/([0-9a-f-]+)$/i);
+  if (request.method === "DELETE" && ideaMatch) {
+    const deleted = await deleteIdea(env.DB, ideaMatch[1]);
+    return deleted ? json({ deleted: true }) : json({ error: "Idea not found." }, { status: 404 });
+  }
+
   if (request.method === "PATCH" && ideaMatch) {
     const body = (await request.json()) as {
       status?: IdeaStatus;

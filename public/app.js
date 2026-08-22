@@ -207,6 +207,7 @@ function openIdea(id) {
       <button class="action" data-action="destination_codex" data-id="${idea.id}" type="button">Destination: Codex</button>
       <button class="action" data-action="destination_architecture" data-id="${idea.id}" type="button">Architecture chat</button>
       <button class="action" data-action="hold" data-id="${idea.id}" type="button">Hold</button>
+      <button class="action danger" data-action="delete" data-id="${idea.id}" type="button">Delete idea ×</button>
     </div>` : "";
   $("#dialog-content").innerHTML = `<div class="dialog-inner">
     <div class="idea-meta"><span class="idea-kind">${idea.kind === "project_edit" ? "Project edit" : "New project"}</span><span>· ${escapeHtml(idea.status.replace("_", " "))}</span></div>
@@ -242,6 +243,16 @@ async function handleAction(button) {
     if (action === "pin") await updateIdea(id, { pinned: !idea.pinned }, idea.pinned ? "Removed from Best New Ideas." : "Added to Best New Ideas.");
     if (action === "destination_codex") await updateIdea(id, { destination: "codex" }, "Destination set to Codex.");
     if (action === "destination_architecture") await updateIdea(id, { destination: "architecture_chat" }, "Destination set to Architecture Chat.");
+    if (action === "delete") {
+      const confirmed = window.confirm(`Permanently delete “${idea.title}”? This removes it from storage and cannot be undone.`);
+      if (!confirmed) return;
+      await api(`/api/ideas/${id}`, { method: "DELETE" });
+      state.ideas = state.ideas.filter((item) => item.id !== id);
+      renderIdeas();
+      $("#idea-dialog").close();
+      toast("Idea permanently deleted.");
+      return;
+    }
     if (action === "copy") {
       await navigator.clipboard.writeText(idea.handoffPrompt);
       toast("Codex brief copied. Paste it into the right project when ready.");

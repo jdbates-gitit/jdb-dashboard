@@ -381,6 +381,19 @@ export async function updateIdea(
   return row ? parseIdea(row) : null;
 }
 
+interface IdeaDeleteDatabase {
+  prepare(query: string): {
+    bind(...values: unknown[]): {
+      run(): Promise<{ meta: { changes: number } }>;
+    };
+  };
+}
+
+export async function deleteIdea(db: IdeaDeleteDatabase, id: string): Promise<boolean> {
+  const result = await db.prepare("DELETE FROM ideas WHERE id = ?").bind(id).run();
+  return result.meta.changes > 0;
+}
+
 export async function startGenerationRun(
   db: D1Database,
   requestedBy: string,

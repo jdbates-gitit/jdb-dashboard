@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { extractOutputText, sanitizeGeneratedBriefing } from "../src/briefing";
-import { selectPublicSections, type BriefingSection } from "../src/db";
+import { deleteIdea, selectPublicSections, type BriefingSection } from "../src/db";
 import worker, { classifyHostname, localDate, localHour } from "../src/index";
 
 describe("briefing helpers", () => {
@@ -46,6 +46,35 @@ describe("briefing helpers", () => {
     ]);
   });
 
+  it("permanently deletes an idea from D1", async () => {
+    let boundId = "";
+    const db = {
+      prepare: () => ({
+        bind: (...values: unknown[]) => ({
+          run: async () => {
+            boundId = String(values[0]);
+            return {
+              success: true,
+              results: [],
+              meta: {
+                duration: 0,
+                size_after: 0,
+                rows_read: 0,
+                rows_written: 1,
+                last_row_id: 0,
+                changed_db: true,
+                changes: 1,
+              },
+            };
+          },
+        }),
+      }),
+    };
+
+    await expect(deleteIdea(db, "idea-123")).resolves.toBe(true);
+    expect(boundId).toBe("idea-123");
+  });
+
   it("separates private, public, and preview hostnames", () => {
     expect(classifyHostname("dashboard.jdb-builds.com")).toBe("private");
     expect(classifyHostname("briefing.jdb-builds.com")).toBe("public");
@@ -62,6 +91,10 @@ describe("briefing helpers", () => {
       new Request("https://briefing.jdb-builds.com/api/generate", { method: "POST" }),
       env,
     );
+    const publicDelete = await worker.fetch(
+      new Request("https://briefing.jdb-builds.com/api/ideas/00000000-0000-0000-0000-000000000000", { method: "DELETE" }),
+      env,
+    );
     const previewIdeas = await worker.fetch(
       new Request("https://jdb-dashboard.jdbates.workers.dev/api/ideas"),
       env,
@@ -70,11 +103,17 @@ describe("briefing helpers", () => {
       new Request("https://dashboard.jdb-builds.com/api/ideas"),
       env,
     );
+    const unauthenticatedPrivateDelete = await worker.fetch(
+      new Request("https://dashboard.jdb-builds.com/api/ideas/00000000-0000-0000-0000-000000000000", { method: "DELETE" }),
+      env,
+    );
 
     expect(publicIdeas.status).toBe(404);
     expect(publicGenerate.status).toBe(405);
+    expect(publicDelete.status).toBe(405);
     expect(previewIdeas.status).toBe(404);
     expect(unauthenticatedPrivateIdeas.status).toBe(403);
+    expect(unauthenticatedPrivateDelete.status).toBe(403);
   });
 
   it("serves only the dedicated public page on the public hostname", async () => {
